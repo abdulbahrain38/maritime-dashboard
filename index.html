@@ -117,6 +117,23 @@ select{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 .more{margin:14px 0;padding:6px 16px;background:var(--panel);border:1px solid var(--line);border-radius:6px}
 .empty{padding:36px 0;color:var(--mute)}
 footer{color:var(--mute);font-size:.82em;border-top:1px solid var(--line);padding-top:14px;margin-top:10px}
+/* الأخبار والمصادر */
+.src{margin:28px 0 8px}
+.src-grid{display:grid;grid-template-columns:3fr 2fr;gap:14px;margin-top:10px}
+.news{list-style:none;margin:0;padding:0}
+.news li{border-top:1px solid var(--line);padding:8px 0}
+.news li:first-child{border-top:0;padding-top:0}
+.news a{color:var(--text);text-decoration:none;direction:ltr;unicode-bidi:isolate;display:block;text-align:left;font-family:Tahoma,sans-serif;font-size:14px;line-height:1.5}
+.news a:hover{color:var(--sel)}
+.news .small{display:flex;gap:8px;flex-wrap:wrap}
+.ctf{font-size:.78em;border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--sel)}
+.links{list-style:none;margin:0;padding:0}
+.links li{border-top:1px solid var(--line);padding:7px 0}
+.links li:first-child{border-top:0;padding-top:0}
+.links a{color:var(--sel);text-decoration:none;font-weight:700}
+.links a:hover{text-decoration:underline}
+.links .lock{font-size:.75em;color:var(--c-susp);border:1px solid #f2b84b55;border-radius:4px;padding:0 5px;margin-inline-start:6px;font-weight:400}
+@media(max-width:700px){.src-grid{grid-template-columns:1fr}}
 @media(max-width:860px){.ww-grid{grid-template-columns:1fr 1fr}.ww-grid .card:last-child{grid-column:1/-1}}
 @media(max-width:700px){.pulse{grid-template-columns:1fr}.item summary{grid-template-columns:4px 1fr}.when{grid-column:2}.item summary>div:last-child{grid-column:2}.det{margin-inline-start:18px}#map{height:320px}.ww-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important}}
@@ -192,7 +209,30 @@ if(Math.abs(a-b)<0.5)document.documentElement.classList.add("no-majalla")}catch(
 <ol class="feed" id="feed"></ol>
 <button class="more" id="more" hidden>عرض المزيد</button>
 
-<footer>المصادر: UKMTO، المركز البحري التابع للبحرية الملكية البريطانية، وتُعرض نصوص التحذيرات كما صدرت والمنطقة تُحسب من الإحداثيات. ولوحة الوضع اليومي من صفحة Windward Daily Intelligence العامة. للاطلاع الشخصي وليست مرجعًا ملاحيًا.</footer>
+<section class="src" aria-label="الأخبار والمصادر">
+  <h2>الأخبار والمصادر</h2>
+  <div class="src-grid">
+    <div class="card">
+      <h3>أخبار القوات البحرية المشتركة (CMF)</h3>
+      <ul class="news" id="cmf-list"><li class="small">لا توجد أخبار محمّلة حاليًا.</li></ul>
+      <a class="more-link" href="https://combinedmaritimeforces.com/news/all-news/" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none">كل الأخبار في موقع CMF ←</a>
+    </div>
+    <div class="card">
+      <h3>روابط المصادر</h3>
+      <ul class="links">
+        <li><a href="https://www.ukmto.org/partner-products/jmic-products/jmic-advisories" target="_blank" rel="noopener">تحذيرات JMIC</a><div class="small">توصيات مركز المعلومات البحرية المشترك للسفن التجارية</div></li>
+        <li><a href="https://www.ukmto.org/partner-products/jmic-products/infonotes" target="_blank" rel="noopener">مذكرات JMIC الفورية</a><div class="small">تحليل الحادث خلال 24 ساعة من وقوعه</div></li>
+        <li><a href="https://www.ukmto.org/partner-products/jmic-products/weekly-dashboard" target="_blank" rel="noopener">اللوحة الأسبوعية لـ JMIC</a><div class="small">ملخص الأسبوع وتقييم التهديد الإقليمي</div></li>
+        <li><a href="https://www.ukmto.org/partner-products/jmic-products/jmic-monthly-statistics" target="_blank" rel="noopener">إحصاءات JMIC الشهرية</a><div class="small">أعداد الحوادث واتجاهاتها شهريًا</div></li>
+        <li><a href="https://www.ukmto.org/recent-incidents" target="_blank" rel="noopener">بلاغات UKMTO الأخيرة</a><div class="small">المصدر الأصلي لقائمة الحوادث في هذه الصفحة</div></li>
+        <li><a href="https://insights.windward.ai/" target="_blank" rel="noopener">Windward Daily Intelligence</a><div class="small">مصدر لوحة الوضع البحري اليومي</div></li>
+        <li><a href="https://training.ioris.io/" target="_blank" rel="noopener">منصة IORIS</a><span class="lock">بتسجيل دخول</span><div class="small">منصة تبادل المعلومات البحرية الإقليمية، تُفتح بحسابك الشخصي</div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>المصادر: UKMTO، المركز البحري التابع للبحرية الملكية البريطانية، وتُعرض نصوص التحذيرات كما صدرت والمنطقة تُحسب من الإحداثيات. ولوحة الوضع اليومي من صفحة Windward Daily Intelligence العامة، والأخبار من موقع القوات البحرية المشتركة CMF. للاطلاع الشخصي وليست مرجعًا ملاحيًا.</footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -434,7 +474,15 @@ async function load(){
   }catch(e){S.ww=null}
   render();
 }
+/* ---------- أخبار CMF ---------- */
+function renderCMF(c){
+  if(!c||!Array.isArray(c.items)||!c.items.length)return;
+  $("cmf-list").innerHTML=c.items.slice(0,7).map(x=>`<li><a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.title)}</a>
+    <div class="small">${x.date?`<span>${fmtD(x.date)} · ${ago(x.date)}</span>`:""}${(x.ctf||[]).map(t=>`<span class="ctf">${esc(t)}</span>`).join("")}</div></li>`).join("");
+}
+async function loadCMF(){try{const r=await fetch("cmf.json?t="+Date.now(),{cache:"no-store"});if(r.ok)renderCMF(await r.json())}catch(e){}}
 initMap();
+loadCMF();
 load();setInterval(load,5*60*1000);
 </script>
 </body>

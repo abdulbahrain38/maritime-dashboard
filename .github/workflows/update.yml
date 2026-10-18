@@ -1,4 +1,4 @@
-name: تحديث بيانات UKMTO وWindward ونشر الصفحة
+name: تحديث بيانات UKMTO وWindward وCMF ونشر الصفحة
 
 on:
   schedule:
@@ -36,6 +36,7 @@ jobs:
           PAGES_URL="https://${OWNER}.github.io/${REPO}"
           curl -fsSL "$PAGES_URL/data.json" -o prev/data.json || echo "لا توجد نسخة سابقة من data.json"
           curl -fsSL "$PAGES_URL/windward.json" -o prev/windward.json || echo "لا توجد نسخة سابقة من windward.json"
+          curl -fsSL "$PAGES_URL/cmf.json" -o prev/cmf.json || echo "لا توجد نسخة سابقة من cmf.json"
 
       - name: جلب بلاغات UKMTO مع الإبقاء على الأرشيف
         run: |
@@ -47,6 +48,13 @@ jobs:
           if ! python fetch_windward.py --out site/windward.json; then
             echo "::warning::فشل جلب Windward، أُبقي على آخر نسخة منشورة"
             if [ -s prev/windward.json ]; then cp prev/windward.json site/windward.json; fi
+          fi
+
+      - name: جلب أخبار القوات البحرية المشتركة CMF (لا يوقف النشر إذا فشل)
+        run: |
+          if ! python fetch_cmf.py --out site/cmf.json; then
+            echo "::warning::فشل جلب أخبار CMF، أُبقي على آخر نسخة منشورة"
+            if [ -s prev/cmf.json ]; then cp prev/cmf.json site/cmf.json; fi
           fi
 
       - name: بناء الموقع
