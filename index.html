@@ -55,6 +55,9 @@ html:not(.no-majalla) .leaflet-popup-content{font-size:18px}
 .leaflet-control-attribution{background:#0a1017cc!important;color:var(--mute)!important;font-family:Tahoma,sans-serif}
 .leaflet-control-attribution a{color:var(--mute)!important}
 .leaflet-bar a{background:var(--panel);color:var(--text);border-color:var(--line)}
+.leaflet-control-layers{background:var(--panel);color:var(--text);border:1px solid var(--line)!important;font-size:15px;direction:rtl;text-align:right}
+.leaflet-control-layers-toggle{filter:invert(.85)}
+.leaflet-control-layers label{margin:2px 0}
 .leaflet-bar a:hover{background:var(--line);color:var(--text)}
 .pop-tag{font-weight:700;color:var(--c)}
 .pop-sub{color:var(--mute)}
@@ -255,8 +258,20 @@ let map,layer,markers={};
 function initMap(){
   if(!window.L){$("map").innerHTML='<div class="empty" style="padding:30px;direction:rtl;text-align:center">تعذّر تحميل الخريطة.</div>';return}
   map=L.map("map",{zoomControl:true,attributionControl:true,scrollWheelZoom:false,worldCopyJump:true}).fitBounds(BOUNDS.all);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{subdomains:"abcd",maxZoom:12,
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}).addTo(map);
+  // خلفيات مجانية لا تحتاج مفتاحًا، مع زر للتبديل بينها
+  const esri="https://server.arcgisonline.com/ArcGIS/rest/services/",ea='Tiles &copy; <a href="https://www.esri.com">Esri</a>';
+  const dark=L.layerGroup([
+    L.tileLayer(esri+"Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",{maxZoom:16,attribution:ea+" &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap"}),
+    L.tileLayer(esri+"Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",{maxZoom:16})]);
+  const sat=L.layerGroup([
+    L.tileLayer(esri+"World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:17,attribution:ea+" &mdash; Esri, Maxar, Earthstar Geographics"}),
+    L.tileLayer(esri+"Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{maxZoom:17})]);
+  const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'});
+  const bases={"داكنة":dark,"أقمار صناعية":sat,"OpenStreetMap":osm};
+  let pick="داكنة";try{const v=localStorage.getItem("basemap");if(bases[v])pick=v}catch(e){}
+  bases[pick].addTo(map);
+  L.control.layers(bases,null,{position:"topright",collapsed:true}).addTo(map);
+  map.on("baselayerchange",e=>{try{localStorage.setItem("basemap",e.name)}catch(_){}});
   map.on("focus",()=>map.scrollWheelZoom.enable());map.on("blur",()=>map.scrollWheelZoom.disable());
   layer=L.layerGroup().addTo(map);
 }
