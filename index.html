@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مركز العمليات والأخبار البحرية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a1017;--panel:#111a24;--line:#1f2d3d;--text:#dde7f3;--mute:#8497ad;--sel:#4fd1c5;
+--c-attack:#ff6b5b;--c-piracy:#c58cff;--c-susp:#f2b84b;--c-adv:#6fa8dc;--c-mute:#8497ad;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 15px/1.7 "IBM Plex Sans Arabic",Tahoma,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
+.wrap{max-width:1080px;margin:auto;padding:0 18px 40px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 20px;padding:20px 0 8px}
+h1{margin:0;font-size:22px;font-weight:700}
+.stamp{color:var(--mute);font-size:13px}
+.notice{display:none;margin:8px 0;padding:8px 12px;border:1px solid var(--c-susp);color:var(--c-susp);border-radius:6px;font-size:13px}
+.notice.on{display:block}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 0;border-bottom:1px solid var(--line)}
+.tabs button{flex:none;background:none;border:0;border-bottom:2px solid transparent;padding:6px 12px;color:var(--mute)}
+.tabs button[aria-pressed=true]{color:var(--text);border-color:var(--sel);font-weight:500}
+.tabs b{font-weight:500;color:var(--mute);margin-inline-start:6px;font-size:13px}
+.pulse{display:grid;grid-template-columns:minmax(200px,1fr) minmax(280px,2fr);gap:24px;padding:22px 0;align-items:end}
+.nums{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.nums div{border-inline-start:3px solid var(--line);padding-inline-start:10px}
+.nums small{display:block;color:var(--mute);font-size:12.5px}
+.nums strong{font-size:26px;font-weight:700;line-height:1.2}
+.bars{display:flex;align-items:flex-end;gap:5px;height:110px}
+.col{flex:1;display:flex;flex-direction:column-reverse;justify-content:flex-start;height:100%;min-width:0}
+.col i{display:block;width:100%;min-height:3px;border-radius:1px}
+.axis{display:flex;justify-content:space-between;color:var(--mute);font-size:11.5px;margin-top:4px;direction:ltr}
+.bar-title{color:var(--mute);font-size:12.5px;margin-bottom:8px}
+.filters{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:6px 0 14px}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 13px;font-size:13.5px;color:var(--mute)}
+.chip[aria-pressed=true]{color:#06121a;background:var(--sel);border-color:var(--sel);font-weight:500}
+select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font:inherit;font-size:13.5px}
+.feed{list-style:none;margin:0;padding:0}
+.item{border-top:1px solid var(--line)}
+.item summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:4px 92px 1fr;gap:0 14px;padding:12px 0}
+.item summary::-webkit-details-marker{display:none}
+.edge{border-radius:2px;background:var(--c)}
+.when{font-size:12.5px;color:var(--mute);line-height:1.5}
+.when b{display:block;color:var(--text);font-weight:500;font-size:13.5px}
+.head{font-weight:500}
+.sub{color:var(--mute);font-size:13.5px}
+.tag{display:inline-block;margin-inline-end:8px;color:var(--c);font-weight:700;font-size:13.5px}
+.flag{display:inline-block;margin-inline-start:8px;font-size:12px;color:var(--c-susp);border:1px solid #f2b84b55;border-radius:4px;padding:0 6px}
+.det{padding:0 0 16px 0;margin-inline-start:110px;color:var(--mute);font-size:13.5px}
+.det pre{white-space:pre-wrap;direction:ltr;text-align:left;font:13px/1.6 ui-monospace,Consolas,monospace;color:var(--text);margin:8px 0;background:var(--panel);padding:10px 12px;border-radius:6px}
+.more{margin:14px 0;padding:6px 16px;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.empty{padding:36px 0;color:var(--mute)}
+footer{color:var(--mute);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px;margin-top:10px}
+@media(max-width:700px){.pulse{grid-template-columns:1fr}.item summary{grid-template-columns:4px 1fr}.when{grid-column:2}.item summary>div:last-child{grid-column:2}.det{margin-inline-start:18px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>مركز العمليات والأخبار البحرية</h1>
+  <div class="stamp">آخر تغيير في البيانات: <time id="stamp">—</time></div>
+</header>
+<div class="notice" id="notice"></div>
+<nav class="tabs" id="tabs" aria-label="المناطق"></nav>
+
+<section class="pulse">
+  <div class="nums">
+    <div><small>الحوادث في الفترة</small><strong id="n-all">0</strong></div>
+    <div><small>استهداف سفن</small><strong id="n-att" style="color:var(--c-attack)">0</strong></div>
+    <div><small>قرصنة واقتراب مشبوه</small><strong id="n-pir" style="color:var(--c-piracy)">0</strong></div>
+    <div><small>آخر حادث</small><strong id="n-last" style="font-size:18px">—</strong></div>
+  </div>
+  <div>
+    <div class="bar-title">الحوادث يوميًا خلال آخر 14 يومًا</div>
+    <div class="bars" id="bars"></div>
+    <div class="axis"><span id="ax1"></span><span id="ax2"></span></div>
+  </div>
+</section>
+
+<section class="filters">
+  <div id="cats" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  <label class="sub">الفترة
+    <select id="days"><option value="7">7 أيام</option><option value="30" selected>30 يومًا</option><option value="90">90 يومًا</option></select>
+  </label>
+</section>
+
+<ol class="feed" id="feed"></ol>
+<button class="more" id="more" hidden>عرض المزيد</button>
+
+<footer>المصدر: UKMTO، المركز البحري التابع للبحرية الملكية البريطانية. تُعرض نصوص التحذيرات كما صدرت، والمنطقة تُحسب من الإحداثيات. للاطلاع الشخصي وليست مرجعًا ملاحيًا.</footer>
+</div>
+
+<script>
+const REG={all:"كل المناطق",gulf:"الخليج العربي",hormuz:"مضيق هرمز",oman:"خليج عمان",bab:"باب المندب والبحر الأحمر",other:"خارج المناطق"};
+const CAT={attack:"استهداف",piracy:"قرصنة واختطاف",suspicious:"نشاط مشبوه",advisory:"تنبيه",other:"أخرى"};
+const COL={attack:"var(--c-attack)",piracy:"var(--c-piracy)",suspicious:"var(--c-susp)",advisory:"var(--c-adv)",other:"var(--c-mute)"};
+const VES={Tanker:"ناقلة",Cargo:"سفينة شحن",Merchant:"سفينة تجارية",Other:"سفينة"};
+const CHIPS=[["all","كل الأنواع"],["attack","استهداف"],["piracy","قرصنة"],["suspicious","نشاط مشبوه"],["advisory","تنبيه"]];
+const DEMO=[
+ {number:0,date:iso(-0.2),reported:iso(-0.2),late_hours:0,type:"Attack",category:"attack",region:"hormuz",location_text:"20NM northeast of Khasab, Oman",vessel_type:"Tanker",piracy:false,reclassified:false,text:"بيانات تجريبية: لم يُحمَّل data.json بعد."},
+ {number:0,date:iso(-1.5),reported:iso(-1.4),late_hours:2.4,type:"Suspicious Activity",category:"suspicious",region:"bab",location_text:"60NM south of Al Mukha, Yemen",vessel_type:"Tanker",piracy:true,reclassified:false,text:"بيانات تجريبية."},
+ {number:0,date:iso(-3),reported:iso(-3),late_hours:0,type:"Advisory",category:"advisory",region:"oman",location_text:null,vessel_type:"Cargo",piracy:false,reclassified:false,text:"بيانات تجريبية."},
+ {number:0,date:iso(-6),reported:iso(-6),late_hours:0,type:"Attack",category:"attack",region:"gulf",location_text:"13NM west of Al Jazeera, UAE",vessel_type:"Tanker",piracy:false,reclassified:false,text:"بيانات تجريبية."}];
+function iso(d){return new Date(Date.now()+d*864e5).toISOString()}
+const $=id=>document.getElementById(id);
+const S={region:"all",cat:"all",days:30,shown:30,data:[]};
+const fmtD=d=>new Date(d).toLocaleDateString("ar-u-nu-latn",{day:"numeric",month:"short"});
+const fmtT=d=>new Date(d).toLocaleTimeString("ar-u-nu-latn",{hour:"2-digit",minute:"2-digit"});
+const ago=d=>{const h=(Date.now()-new Date(d))/36e5;return h<1?"قبل دقائق":h<24?`قبل ${Math.floor(h)} ساعة`:`قبل ${Math.floor(h/24)} يوم`};
+
+function base(){
+  const since=Date.now()-S.days*864e5;
+  return S.data.filter(i=>new Date(i.date)>=since&&(S.region==="all"?(S.cat==="piracy"||i.region!=="other"):i.region===S.region));
+}
+function matchCat(i){return S.cat==="all"||(S.cat==="piracy"?i.piracy:i.category===S.cat)}
+
+function render(){
+  const b=base(), f=b.filter(matchCat);
+  // التبويبات مع العدد
+  const since=Date.now()-S.days*864e5, cnt=r=>S.data.filter(i=>new Date(i.date)>=since&&(r==="all"?i.region!=="other":i.region===r)).length;
+  $("tabs").innerHTML="";
+  ["all","hormuz","gulf","oman","bab"].forEach(r=>{const x=document.createElement("button");x.setAttribute("aria-pressed",r===S.region);x.innerHTML=`${REG[r]}<b>${cnt(r)}</b>`;x.onclick=()=>{S.region=r;S.shown=30;render()};$("tabs").append(x)});
+  $("cats").innerHTML="";
+  CHIPS.forEach(([k,l])=>{const x=document.createElement("button");x.className="chip";x.textContent=l;x.setAttribute("aria-pressed",k===S.cat);x.onclick=()=>{S.cat=k;S.shown=30;render()};$("cats").append(x)});
+  // الأرقام
+  $("n-all").textContent=b.length;
+  $("n-att").textContent=b.filter(i=>i.category==="attack").length;
+  $("n-pir").textContent=b.filter(i=>i.piracy).length;
+  $("n-last").textContent=b[0]?ago(b[0].date):"—";
+  // الأعمدة: 14 يومًا
+  const days=[...Array(14)].map((_,k)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-13+k);return d});
+  const per=days.map(d=>{const e=new Date(d);e.setDate(e.getDate()+1);return b.filter(i=>{const t=new Date(i.date);return t>=d&&t<e})});
+  const mx=Math.max(1,...per.map(a=>a.length));
+  $("bars").innerHTML=per.map((a,k)=>{const seg=["attack","piracy","suspicious","advisory","other"].map(c=>{const n=a.filter(i=>(c==="piracy"?(i.category==="piracy"):i.category===c)).length;return n?`<i style="height:${n/mx*100}%;background:${COL[c]}"></i>`:""}).join("");return `<div class="col" title="${fmtD(days[k])}: ${a.length}">${seg||'<i style="height:3px;background:var(--line)"></i>'}</div>`}).join("");
+  $("ax1").textContent=fmtD(days[0]);$("ax2").textContent=fmtD(days[13]);
+  // القائمة
+  const feed=$("feed");feed.innerHTML="";
+  if(!f.length){feed.innerHTML='<li class="empty">لا توجد حوادث مطابقة في هذه الفترة. جرّب فترة أطول أو منطقة أخرى.</li>'}
+  f.slice(0,S.shown).forEach(i=>{
+    const li=document.createElement("li");li.className="item";
+    const ves=VES[i.vessel_type]||"سفينة";
+    const where=i.location_text?i.location_text:REG[i.region];
+    const d=document.createElement("details");
+    const flags=(i.late_hours>4?`<span class="flag">بلاغ متأخر ${Math.round(i.late_hours)} ساعة</span>`:"")+(i.reclassified?'<span class="flag">أُعيد تصنيفه</span>':"")+(i.pirate_control?'<span class="flag">سفينة تحت سيطرة المهاجمين</span>':"");
+    d.innerHTML=`<summary style="--c:${COL[i.category]}"><span class="edge"></span>
+      <div class="when"><b>${fmtD(i.date)}</b>${fmtT(i.date)}</div>
+      <div><div class="head"><span class="tag">${CAT[i.category]}</span>${ves} · ${REG[i.region]}${flags}</div><div class="sub" dir="auto"></div></div></summary>
+      <div class="det"><div></div><pre></pre></div>`;
+    d.querySelector(".sub").textContent=where;
+    d.querySelector(".det div").textContent=`تحذير رقم ${i.number||"—"} · ${i.type}${i.lat!=null?` · ${(+i.lat).toFixed(2)}, ${(+i.lon).toFixed(2)}`:""}`;
+    d.querySelector("pre").textContent=i.text;
+    li.append(d);feed.append(li);
+  });
+  $("more").hidden=f.length<=S.shown;
+}
+$("more").onclick=()=>{S.shown+=30;render()};
+$("days").onchange=e=>{S.days=+e.target.value;S.shown=30;render()};
+
+async function load(){
+  try{
+    const r=await fetch("data.json?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok)throw new Error(r.status);
+    const d=await r.json();
+    if(!d||!Array.isArray(d.incidents))throw new Error("شكل غير متوقع");
+    S.data=d.incidents;
+    $("stamp").textContent=new Date(d.generated_at).toLocaleString("ar-u-nu-latn",{dateStyle:"medium",timeStyle:"short"});
+    $("notice").className="notice";
+  }catch(e){
+    S.data=DEMO;
+    $("stamp").textContent="—";
+    $("notice").textContent="تعذّر تحميل data.json، والمعروض الآن بيانات تجريبية. إن فتحت الملف من الحاسوب مباشرة فهذا متوقع، شغّله عبر GitHub Pages أو خادم محلي.";
+    $("notice").className="notice on";
+  }
+  render();
+}
+load();setInterval(load,5*60*1000);
+</script>
+</body>
+</html>
