@@ -110,6 +110,9 @@ def build(raw):
         pirate = bool(r.get("vesselUnderPirateControl")) or cat == "piracy" \
             or bool(PIRACY_WORDS.search(text))
         loc = LOCATION.search(text)
+        loc_text = None
+        if loc:  # نقص ما بعد المكان إذا التصق به باقي الجملة
+            loc_text = re.split(r"\s+of\s+(?:a|an|the)\s+", loc.group(1), maxsplit=1)[0].strip()[:90]
         out.append({
             "number": n,
             "date": when.isoformat().replace("+00:00", "Z"),
@@ -122,7 +125,7 @@ def build(raw):
             "source_place": r.get("place"),
             "lat": r["locationLatitude"],
             "lon": r["locationLongitude"],
-            "location_text": loc.group(1).strip() if loc else None,
+            "location_text": loc_text,
             "vessel_type": (r.get("vesselType") or "").strip() or None,
             "piracy": pirate,
             "pirate_control": bool(r.get("vesselUnderPirateControl")),

@@ -31,7 +31,7 @@ h1{margin:0;font-size:22px;font-weight:700}
 .bars{display:flex;align-items:flex-end;gap:5px;height:110px}
 .col{flex:1;display:flex;flex-direction:column-reverse;justify-content:flex-start;height:100%;min-width:0}
 .col i{display:block;width:100%;min-height:3px;border-radius:1px}
-.axis{display:flex;justify-content:space-between;color:var(--mute);font-size:11.5px;margin-top:4px;direction:ltr}
+.axis{display:flex;justify-content:space-between;color:var(--mute);font-size:11.5px;margin-top:4px}
 .bar-title{color:var(--mute);font-size:12.5px;margin-bottom:8px}
 .filters{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:6px 0 14px}
 .chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 13px;font-size:13.5px;color:var(--mute)}
@@ -109,7 +109,15 @@ const $=id=>document.getElementById(id);
 const S={region:"all",cat:"all",days:30,shown:30,data:[]};
 const fmtD=d=>new Date(d).toLocaleDateString("ar-u-nu-latn",{day:"numeric",month:"short"});
 const fmtT=d=>new Date(d).toLocaleTimeString("ar-u-nu-latn",{hour:"2-digit",minute:"2-digit"});
-const ago=d=>{const h=(Date.now()-new Date(d))/36e5;return h<1?"قبل دقائق":h<24?`قبل ${Math.floor(h)} ساعة`:`قبل ${Math.floor(h/24)} يوم`};
+const unit=(n,one,two,few,many)=>n===1?one:n===2?two:n<=10?`${n} ${few}`:`${n} ${many}`;
+const ago=d=>{const h=(Date.now()-new Date(d))/36e5;if(h<1)return"قبل دقائق";if(h<24)return"قبل "+unit(Math.floor(h),"ساعة","ساعتين","ساعات","ساعة");return"قبل "+unit(Math.floor(h/24),"يوم","يومين","أيام","يومًا")};
+const DIR={north:"شمال",south:"جنوب",east:"شرق",west:"غرب",northeast:"شمال شرق",northwest:"شمال غرب",southeast:"جنوب شرق",southwest:"جنوب غرب"};
+function whereOf(i){
+  const m=(i.location_text||"").match(/^(\d+)\s?NM\s+([a-z\- ]+?)\s+of\s+(.+)$/i);
+  if(m){const d=DIR[m[2].toLowerCase().replace(/[- ]/g,"")];if(d)return{pre:`${m[1]} ميلًا بحريًا ${d} `,place:m[3]}}
+  if(i.lat!=null&&i.lon!=null){const a=+i.lat,o=+i.lon;return{pre:"الموقع: ",place:`${Math.abs(a).toFixed(2)}°${a>=0?"N":"S"} ${Math.abs(o).toFixed(2)}°${o>=0?"E":"W"}`}}
+  return{pre:"",place:REG[i.region]};
+}
 
 function base(){
   const since=Date.now()-S.days*864e5;
@@ -142,14 +150,13 @@ function render(){
   f.slice(0,S.shown).forEach(i=>{
     const li=document.createElement("li");li.className="item";
     const ves=VES[i.vessel_type]||"سفينة";
-    const where=i.location_text?i.location_text:REG[i.region];
     const d=document.createElement("details");
     const flags=(i.late_hours>4?`<span class="flag">بلاغ متأخر ${Math.round(i.late_hours)} ساعة</span>`:"")+(i.reclassified?'<span class="flag">أُعيد تصنيفه</span>':"")+(i.pirate_control?'<span class="flag">سفينة تحت سيطرة المهاجمين</span>':"");
     d.innerHTML=`<summary style="--c:${COL[i.category]}"><span class="edge"></span>
       <div class="when"><b>${fmtD(i.date)}</b>${fmtT(i.date)}</div>
-      <div><div class="head"><span class="tag">${CAT[i.category]}</span>${ves} · ${REG[i.region]}${flags}</div><div class="sub" dir="auto"></div></div></summary>
+      <div><div class="head"><span class="tag">${CAT[i.category]}</span>${ves} · ${REG[i.region]}${flags}</div><div class="sub"></div></div></summary>
       <div class="det"><div></div><pre></pre></div>`;
-    d.querySelector(".sub").textContent=where;
+    const w=whereOf(i),sub=d.querySelector(".sub");sub.append(w.pre);const bd=document.createElement("bdi");bd.textContent=w.place;sub.append(bd);
     d.querySelector(".det div").textContent=`تحذير رقم ${i.number||"—"} · ${i.type}${i.lat!=null?` · ${(+i.lat).toFixed(2)}, ${(+i.lon).toFixed(2)}`:""}`;
     d.querySelector("pre").textContent=i.text;
     li.append(d);feed.append(li);
