@@ -1,0 +1,2 @@
+light: errors=['RTL Text Plugin failed to import scripts from https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js']
+dark: errors=['RTL Text Plugin failed to import scripts from https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js']
