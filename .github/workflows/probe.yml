@@ -1,0 +1,18 @@
+name: probe
+on:
+  push:
+    branches: [probe-jmic]
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          UA="maritime-dashboard/1.0 (personal use)"
+          for u in https://www.ukmto.org/partner-products/jmic-products/jmic-advisories https://www.ukmto.org/partner-products/jmic-products/weekly-dashboard; do
+            echo "=== $u"; curl -sL -A "$UA" "$u" -o p.html; wc -c p.html
+            grep -oE '(https?://[^"'"'"' ]*|/)[^"'"'"' ]*(api|sccd|\.json|\.pdf|graphql)[^"'"'"' <]*' p.html | sort -u | head -40
+            grep -oE 'data-[a-z-]+="[^"]{0,120}"' p.html | sort -u | head -20
+          done
+          echo "=== scripts"; grep -oE 'src="[^"]+\.js[^"]*"' p.html | head
+          for a in products jmic partnerproducts ukmto/products ukmto/partnerproducts jmic/advisories; do
+            code=$(curl -s -o r.json -w "%{http_code}" -A "$UA" "https://sccd.royalnavy.mod.uk/api/$a"); echo "api/$a -> $code $(head -c 200 r.json)"; done
