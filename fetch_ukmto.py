@@ -4,6 +4,7 @@
 الاستخدام:
     python fetch_ukmto.py --out site/data.json
     python fetch_ukmto.py --input sample.json --out data.json   (للاختبار دون إنترنت)
+    python fetch_ukmto.py --merge prev/data.json --out site/data.json   (يحتفظ بالأرشيف السابق)
 
 إذا تغيّر شكل البيانات أو فشل الجلب يتوقف السكربت برمز خطأ ولا يكتب شيئًا،
 فتبقى آخر نسخة سليمة منشورة.
@@ -142,10 +143,40 @@ def build(raw):
     }
 
 
+def incident_key(i):
+    return f"{i.get('number')}-{str(i.get('date', ''))[:4]}"
+
+
+def merge(data, prev_path):
+    """يضيف إلى البيانات الجديدة كل حادث قديم لم يعد موجودًا في المصدر (أرشيف تراكمي).
+    إذا كان الملف السابق مفقودًا أو تالفًا يُتجاهل بهدوء."""
+    try:
+        with open(prev_path, encoding="utf-8") as f:
+            prev = json.load(f)
+        old = prev.get("incidents") if isinstance(prev, dict) else None
+        if not isinstance(old, list):
+            raise ValueError("شكل غير متوقع")
+    except Exception as e:  # noqa
+        print(f"لا أرشيف سابق صالح ({e})، أكمل بالبيانات الجديدة فقط.")
+        return data
+    have = {incident_key(i) for i in data["incidents"]}
+    added = 0
+    for i in old:
+        if isinstance(i, dict) and i.get("date") and incident_key(i) not in have:
+            data["incidents"].append(i)
+            have.add(incident_key(i))
+            added += 1
+    data["incidents"].sort(key=lambda x: x["date"], reverse=True)
+    data["count"] = len(data["incidents"])
+    print(f"أُضيف {added} حادثًا من الأرشيف السابق.")
+    return data
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="data.json")
     ap.add_argument("--input", help="ملف JSON محلي بدل الجلب من الإنترنت")
+    ap.add_argument("--merge", help="data.json السابق لدمج الحوادث القديمة (أرشيف)")
     a = ap.parse_args()
     if a.input:
         with open(a.input, encoding="utf-8") as f:
@@ -153,6 +184,10 @@ def main():
     else:
         raw = fetch(API)
     data = build(raw)
+    if a.merge:
+        data = merge(data, a.merge)
+    if data["incidents"]:
+        data["archive_since"] = data["incidents"][-1]["date"]
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     tmp = a.out + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:

@@ -5,57 +5,125 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>مركز العمليات والأخبار البحرية</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{--bg:#0a1017;--panel:#111a24;--line:#1f2d3d;--text:#dde7f3;--mute:#8497ad;--sel:#4fd1c5;
 --c-attack:#ff6b5b;--c-piracy:#c58cff;--c-susp:#f2b84b;--c-adv:#6fa8dc;--c-mute:#8497ad;
+--font:"Sakkal Majalla","IBM Plex Sans Arabic",Tahoma,sans-serif;--fs:19px;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* إذا لم يكن خط Sakkal Majalla مثبتًا على الجهاز (مثل الجوال) يُستخدم IBM Plex بحجم مناسب */
+html.no-majalla{--fs:15px}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:400 15px/1.7 "IBM Plex Sans Arabic",Tahoma,sans-serif}
-button{font:inherit;color:inherit;cursor:pointer}
+body{margin:0;background:var(--bg);color:var(--text);font:400 var(--fs)/1.65 var(--font)}
+button,select{font-family:var(--font)}
+button{font-size:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--sel);outline-offset:2px}
 .wrap{max-width:1080px;margin:auto;padding:0 18px 40px}
 header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 20px;padding:20px 0 8px}
-h1{margin:0;font-size:22px;font-weight:700}
-.stamp{color:var(--mute);font-size:13px}
-.notice{display:none;margin:8px 0;padding:8px 12px;border:1px solid var(--c-susp);color:var(--c-susp);border-radius:6px;font-size:13px}
+h1{margin:0;font-size:1.55em;font-weight:700}
+h2{margin:0;font-size:1.2em;font-weight:700}
+.stamp{color:var(--mute);font-size:.85em}
+.notice{display:none;margin:8px 0;padding:8px 12px;border:1px solid var(--c-susp);color:var(--c-susp);border-radius:6px;font-size:.85em}
 .notice.on{display:block}
 .tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 0;border-bottom:1px solid var(--line)}
 .tabs button{flex:none;background:none;border:0;border-bottom:2px solid transparent;padding:6px 12px;color:var(--mute)}
-.tabs button[aria-pressed=true]{color:var(--text);border-color:var(--sel);font-weight:500}
-.tabs b{font-weight:500;color:var(--mute);margin-inline-start:6px;font-size:13px}
+.tabs button[aria-pressed=true]{color:var(--text);border-color:var(--sel);font-weight:700}
+.tabs b{font-weight:500;color:var(--mute);margin-inline-start:6px;font-size:.85em}
 .pulse{display:grid;grid-template-columns:minmax(200px,1fr) minmax(280px,2fr);gap:24px;padding:22px 0;align-items:end}
 .nums{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .nums div{border-inline-start:3px solid var(--line);padding-inline-start:10px}
-.nums small{display:block;color:var(--mute);font-size:12.5px}
-.nums strong{font-size:26px;font-weight:700;line-height:1.2}
-.bars{display:flex;align-items:flex-end;gap:5px;height:110px}
+.nums small{display:block;color:var(--mute);font-size:.82em}
+.nums strong{font-size:1.75em;font-weight:700;line-height:1.2}
+.bars{display:flex;align-items:flex-end;gap:4px;height:110px}
+.bars.dense{gap:2px}
 .col{flex:1;display:flex;flex-direction:column-reverse;justify-content:flex-start;height:100%;min-width:0}
 .col i{display:block;width:100%;min-height:3px;border-radius:1px}
-.axis{display:flex;justify-content:space-between;color:var(--mute);font-size:11.5px;margin-top:4px}
-.bar-title{color:var(--mute);font-size:12.5px;margin-bottom:8px}
+.axis{display:flex;justify-content:space-between;color:var(--mute);font-size:.75em;margin-top:4px}
+.bar-title{color:var(--mute);font-size:.82em;margin-bottom:8px}
+
+/* الخريطة */
+.mapbox{position:relative;margin:4px 0 22px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+#map{height:430px;direction:ltr;background:#0d141c}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;padding:8px 12px;border-top:1px solid var(--line);font-size:.82em;color:var(--mute)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-inline-end:6px;vertical-align:middle}
+.legend .ring::before{background:none;border:2px solid var(--text);width:8px;height:8px}
+.leaflet-container{font-family:var(--font)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--text);border:1px solid var(--line)}
+.leaflet-popup-content{margin:10px 14px;font-size:15px;line-height:1.55;direction:rtl;text-align:right;min-width:200px}
+html:not(.no-majalla) .leaflet-popup-content{font-size:18px}
+.leaflet-container a.leaflet-popup-close-button{color:var(--mute)}
+.leaflet-control-attribution{background:#0a1017cc!important;color:var(--mute)!important;font-family:Tahoma,sans-serif}
+.leaflet-control-attribution a{color:var(--mute)!important}
+.leaflet-bar a{background:var(--panel);color:var(--text);border-color:var(--line)}
+.leaflet-bar a:hover{background:var(--line);color:var(--text)}
+.pop-tag{font-weight:700;color:var(--c)}
+.pop-sub{color:var(--mute)}
+.pop-btn{margin-top:6px;background:none;border:1px solid var(--line);border-radius:5px;padding:1px 10px;color:var(--sel)}
+.recent-ring{animation:ring 2.2s ease-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(2.6)}}
+
+/* Windward */
+.ww{margin:0 0 24px}
+.ww[hidden]{display:none}
+.ww-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 16px;margin-bottom:10px}
+.ww-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.card h3{margin:0 0 10px;font-size:1em;font-weight:700}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kv div{min-width:0}
+.kv small{display:block;color:var(--mute);font-size:.8em}
+.kv strong{font-size:1.5em;font-weight:700;line-height:1.2}
+.kv em{font-style:normal;font-size:.78em;margin-inline-start:6px}
+.up{color:var(--c-attack)}.down{color:var(--sel)}
+.dark-n{color:var(--c-susp)}
+.row-title{color:var(--mute);font-size:.85em;margin:10px 0 4px;border-top:1px solid var(--line);padding-top:8px}
+.row-title:first-of-type{border:0;padding-top:0;margin-top:0}
+.small{color:var(--mute);font-size:.8em}
+.mini{list-style:none;margin:8px 0 0;padding:0;font-size:.88em}
+.mini li{border-top:1px solid var(--line);padding:6px 0}
+.mini .t{color:var(--c);font-weight:700;margin-inline-end:6px}
+.mini details summary{cursor:pointer;list-style:none}
+.mini details summary::-webkit-details-marker{display:none}
+.mini p{margin:4px 0 0;color:var(--mute);direction:ltr;text-align:left;font:13px/1.55 ui-monospace,Consolas,monospace}
+.vlist{max-height:230px;overflow:auto}
+.risk{font-size:.78em;border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-inline-start:6px;color:var(--mute)}
+.risk.High,.risk.Dark{color:var(--c-attack);border-color:#ff6b5b66}
+.risk.Moderate,.risk.Medium{color:var(--c-susp);border-color:#f2b84b66}
+.more-link{background:none;border:0;color:var(--sel);padding:6px 0 0;font-size:.85em}
+
 .filters{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:6px 0 14px}
-.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 13px;font-size:13.5px;color:var(--mute)}
-.chip[aria-pressed=true]{color:#06121a;background:var(--sel);border-color:var(--sel);font-weight:500}
-select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font:inherit;font-size:13.5px}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px 13px;font-size:.9em;color:var(--mute)}
+.chip[aria-pressed=true]{color:#06121a;background:var(--sel);border-color:var(--sel);font-weight:700}
+select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:.9em}
 .feed{list-style:none;margin:0;padding:0}
 .item{border-top:1px solid var(--line)}
 .item summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:4px 92px 1fr;gap:0 14px;padding:12px 0}
 .item summary::-webkit-details-marker{display:none}
+.item.hl{animation:hl 1.6s ease-out}
+@keyframes hl{0%{background:#4fd1c522}100%{background:transparent}}
 .edge{border-radius:2px;background:var(--c)}
-.when{font-size:12.5px;color:var(--mute);line-height:1.5}
-.when b{display:block;color:var(--text);font-weight:500;font-size:13.5px}
+.when{font-size:.82em;color:var(--mute);line-height:1.5}
+.when b{display:block;color:var(--text);font-weight:500;font-size:1.1em}
 .head{font-weight:500}
-.sub{color:var(--mute);font-size:13.5px}
-.tag{display:inline-block;margin-inline-end:8px;color:var(--c);font-weight:700;font-size:13.5px}
-.flag{display:inline-block;margin-inline-start:8px;font-size:12px;color:var(--c-susp);border:1px solid #f2b84b55;border-radius:4px;padding:0 6px}
-.det{padding:0 0 16px 0;margin-inline-start:110px;color:var(--mute);font-size:13.5px}
+.sub{color:var(--mute);font-size:.9em}
+.tag{display:inline-block;margin-inline-end:8px;color:var(--c);font-weight:700}
+.flag{display:inline-block;margin-inline-start:8px;font-size:.78em;color:var(--c-susp);border:1px solid #f2b84b55;border-radius:4px;padding:0 6px}
+.det{padding:0 0 16px 0;margin-inline-start:110px;color:var(--mute);font-size:.9em}
 .det pre{white-space:pre-wrap;direction:ltr;text-align:left;font:13px/1.6 ui-monospace,Consolas,monospace;color:var(--text);margin:8px 0;background:var(--panel);padding:10px 12px;border-radius:6px}
+.det .pop-btn{margin:0}
 .more{margin:14px 0;padding:6px 16px;background:var(--panel);border:1px solid var(--line);border-radius:6px}
 .empty{padding:36px 0;color:var(--mute)}
-footer{color:var(--mute);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px;margin-top:10px}
-@media(max-width:700px){.pulse{grid-template-columns:1fr}.item summary{grid-template-columns:4px 1fr}.when{grid-column:2}.item summary>div:last-child{grid-column:2}.det{margin-inline-start:18px}}
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+footer{color:var(--mute);font-size:.82em;border-top:1px solid var(--line);padding-top:14px;margin-top:10px}
+@media(max-width:860px){.ww-grid{grid-template-columns:1fr 1fr}.ww-grid .card:last-child{grid-column:1/-1}}
+@media(max-width:700px){.pulse{grid-template-columns:1fr}.item summary{grid-template-columns:4px 1fr}.when{grid-column:2}.item summary>div:last-child{grid-column:2}.det{margin-inline-start:18px}#map{height:320px}.ww-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important}}
 </style>
+<script>
+// هل خط Sakkal Majalla مثبت؟ نقارن عرض نص عربي بالخط وبدونه
+(function(){try{const c=document.createElement("canvas").getContext("2d"),t="مركز العمليات البحرية ١٢٣";
+c.font="40px monospace";const a=c.measureText(t).width;c.font='40px "Sakkal Majalla",monospace';const b=c.measureText(t).width;
+if(Math.abs(a-b)<0.5)document.documentElement.classList.add("no-majalla")}catch(e){}})();
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -71,47 +139,86 @@ footer{color:var(--mute);font-size:12.5px;border-top:1px solid var(--line);paddi
     <div><small>الحوادث في الفترة</small><strong id="n-all">0</strong></div>
     <div><small>استهداف سفن</small><strong id="n-att" style="color:var(--c-attack)">0</strong></div>
     <div><small>قرصنة واقتراب مشبوه</small><strong id="n-pir" style="color:var(--c-piracy)">0</strong></div>
-    <div><small>آخر حادث</small><strong id="n-last" style="font-size:18px">—</strong></div>
+    <div><small>آخر حادث</small><strong id="n-last" style="font-size:1.2em">—</strong></div>
   </div>
   <div>
-    <div class="bar-title">الحوادث يوميًا خلال آخر 14 يومًا</div>
+    <div class="bar-title" id="bar-title">الحوادث يوميًا</div>
     <div class="bars" id="bars"></div>
     <div class="axis"><span id="ax1"></span><span id="ax2"></span></div>
+  </div>
+</section>
+
+<section class="mapbox" aria-label="خريطة الحوادث">
+  <div id="map"></div>
+  <div class="legend">
+    <span style="--c:var(--c-attack)">استهداف</span>
+    <span style="--c:var(--c-piracy)">قرصنة</span>
+    <span style="--c:var(--c-susp)">نشاط مشبوه</span>
+    <span style="--c:var(--c-adv)">تنبيه</span>
+    <span class="ring">خلال آخر 24 ساعة</span>
+    <span id="map-count" style="margin-inline-start:auto"></span>
+  </div>
+</section>
+
+<section class="ww" id="ww" hidden>
+  <div class="ww-head">
+    <h2>الوضع البحري اليومي</h2>
+    <div class="small" id="ww-stamp"></div>
+  </div>
+  <div class="notice" id="ww-notice"></div>
+  <div class="ww-grid">
+    <div class="card" id="ww-transit"></div>
+    <div class="card" id="ww-gps"></div>
+    <div class="card" id="ww-att"></div>
   </div>
 </section>
 
 <section class="filters">
   <div id="cats" style="display:flex;gap:6px;flex-wrap:wrap"></div>
   <label class="sub">الفترة
-    <select id="days"><option value="7">7 أيام</option><option value="30" selected>30 يومًا</option><option value="90">90 يومًا</option></select>
+    <select id="days">
+      <option value="7">7 أيام</option>
+      <option value="30" selected>30 يومًا</option>
+      <option value="90">90 يومًا</option>
+      <option value="120">120 يومًا</option>
+      <option value="0">كل الأرشيف</option>
+    </select>
   </label>
 </section>
 
 <ol class="feed" id="feed"></ol>
 <button class="more" id="more" hidden>عرض المزيد</button>
 
-<footer>المصدر: UKMTO، المركز البحري التابع للبحرية الملكية البريطانية. تُعرض نصوص التحذيرات كما صدرت، والمنطقة تُحسب من الإحداثيات. للاطلاع الشخصي وليست مرجعًا ملاحيًا.</footer>
+<footer>المصادر: UKMTO، المركز البحري التابع للبحرية الملكية البريطانية، وتُعرض نصوص التحذيرات كما صدرت والمنطقة تُحسب من الإحداثيات. ولوحة الوضع اليومي من صفحة Windward Daily Intelligence العامة. للاطلاع الشخصي وليست مرجعًا ملاحيًا.</footer>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 const REG={all:"كل المناطق",gulf:"الخليج العربي",hormuz:"مضيق هرمز",oman:"خليج عمان",bab:"باب المندب والبحر الأحمر",other:"خارج المناطق"};
 const CAT={attack:"استهداف",piracy:"قرصنة واختطاف",suspicious:"نشاط مشبوه",advisory:"تنبيه",other:"أخرى"};
 const COL={attack:"var(--c-attack)",piracy:"var(--c-piracy)",suspicious:"var(--c-susp)",advisory:"var(--c-adv)",other:"var(--c-mute)"};
+const HEX={attack:"#ff6b5b",piracy:"#c58cff",suspicious:"#f2b84b",advisory:"#6fa8dc",other:"#8497ad"};
 const VES={Tanker:"ناقلة",Cargo:"سفينة شحن",Merchant:"سفينة تجارية",Other:"سفينة"};
 const CHIPS=[["all","كل الأنواع"],["attack","استهداف"],["piracy","قرصنة"],["suspicious","نشاط مشبوه"],["advisory","تنبيه"]];
+const BOUNDS={all:[[11,32],[30.8,62]],hormuz:[[25.2,55.4],[27.4,57.6]],gulf:[[23.6,47.5],[30.6,56.6]],oman:[[22,56],[25.8,62]],bab:[[10.5,32],[30,53.5]]};
 const DEMO=[
- {number:0,date:iso(-0.2),reported:iso(-0.2),late_hours:0,type:"Attack",category:"attack",region:"hormuz",location_text:"20NM northeast of Khasab, Oman",vessel_type:"Tanker",piracy:false,reclassified:false,text:"بيانات تجريبية: لم يُحمَّل data.json بعد."},
- {number:0,date:iso(-1.5),reported:iso(-1.4),late_hours:2.4,type:"Suspicious Activity",category:"suspicious",region:"bab",location_text:"60NM south of Al Mukha, Yemen",vessel_type:"Tanker",piracy:true,reclassified:false,text:"بيانات تجريبية."},
- {number:0,date:iso(-3),reported:iso(-3),late_hours:0,type:"Advisory",category:"advisory",region:"oman",location_text:null,vessel_type:"Cargo",piracy:false,reclassified:false,text:"بيانات تجريبية."},
- {number:0,date:iso(-6),reported:iso(-6),late_hours:0,type:"Attack",category:"attack",region:"gulf",location_text:"13NM west of Al Jazeera, UAE",vessel_type:"Tanker",piracy:false,reclassified:false,text:"بيانات تجريبية."}];
+ {number:0,date:iso(-0.2),reported:iso(-0.2),late_hours:0,type:"Attack",category:"attack",region:"hormuz",lat:26.4,lon:56.6,location_text:"20NM northeast of Khasab, Oman",vessel_type:"Tanker",piracy:false,reclassified:false,text:"بيانات تجريبية: لم يُحمَّل data.json بعد."},
+ {number:0,date:iso(-1.5),reported:iso(-1.4),late_hours:2.4,type:"Suspicious Activity",category:"suspicious",region:"bab",lat:12.6,lon:43.2,location_text:"60NM south of Al Mukha, Yemen",vessel_type:"Tanker",piracy:true,reclassified:false,text:"بيانات تجريبية."},
+ {number:0,date:iso(-3),reported:iso(-3),late_hours:0,type:"Advisory",category:"advisory",region:"oman",lat:24.6,lon:57.4,location_text:null,vessel_type:"Cargo",piracy:false,reclassified:false,text:"بيانات تجريبية."},
+ {number:0,date:iso(-6),reported:iso(-6),late_hours:0,type:"Attack",category:"attack",region:"gulf",lat:25.6,lon:54.3,location_text:"13NM west of Al Jazeera, UAE",vessel_type:"Tanker",piracy:false,reclassified:false,text:"بيانات تجريبية."}];
 function iso(d){return new Date(Date.now()+d*864e5).toISOString()}
 const $=id=>document.getElementById(id);
-const S={region:"all",cat:"all",days:30,shown:30,data:[]};
+const S={region:"all",cat:"all",days:30,shown:30,data:[],ww:null,wwAll:false};
 const fmtD=d=>new Date(d).toLocaleDateString("ar-u-nu-latn",{day:"numeric",month:"short"});
 const fmtT=d=>new Date(d).toLocaleTimeString("ar-u-nu-latn",{hour:"2-digit",minute:"2-digit"});
+const fmtN=n=>n==null?"—":Number(n).toLocaleString("en-US");
 const unit=(n,one,two,few,many)=>n===1?one:n===2?two:n<=10?`${n} ${few}`:`${n} ${many}`;
 const ago=d=>{const h=(Date.now()-new Date(d))/36e5;if(h<1)return"قبل دقائق";if(h<24)return"قبل "+unit(Math.floor(h),"ساعة","ساعتين","ساعات","ساعة");return"قبل "+unit(Math.floor(h/24),"يوم","يومين","أيام","يومًا")};
 const DIR={north:"شمال",south:"جنوب",east:"شرق",west:"غرب",northeast:"شمال شرق",northwest:"شمال غرب",southeast:"جنوب شرق",southwest:"جنوب غرب"};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const keyOf=i=>`${i.number}-${String(i.date).slice(0,4)}`;
+// لون واحد لكل حادث يُستخدم في الأعمدة والخريطة والقائمة: الاستهداف أولًا ثم القرصنة
+const segOf=i=>i.category==="attack"?"attack":(i.piracy||i.category==="piracy")?"piracy":(HEX[i.category]?i.category:"other");
 function whereOf(i){
   const m=(i.location_text||"").match(/^(\d+)\s?NM\s+([a-z\- ]+?)\s+of\s+(.+)$/i);
   if(m){const d=DIR[m[2].toLowerCase().replace(/[- ]/g,"")];if(d)return{pre:`${m[1]} ميلًا بحريًا ${d} `,place:m[3]}}
@@ -119,52 +226,175 @@ function whereOf(i){
   return{pre:"",place:REG[i.region]};
 }
 
-function base(){
-  const since=Date.now()-S.days*864e5;
-  return S.data.filter(i=>new Date(i.date)>=since&&(S.region==="all"?(S.cat==="piracy"||i.region!=="other"):i.region===S.region));
-}
+const since=()=>S.days?Date.now()-S.days*864e5:0;
+const inRegion=(i,r)=>r==="all"?(S.cat==="piracy"||i.region!=="other"):i.region===r;
+function base(){const s=since();return S.data.filter(i=>new Date(i.date)>=s&&inRegion(i,S.region))}
 function matchCat(i){return S.cat==="all"||(S.cat==="piracy"?i.piracy:i.category===S.cat)}
 
-function render(){
-  const b=base(), f=b.filter(matchCat);
-  // التبويبات مع العدد
-  const since=Date.now()-S.days*864e5, cnt=r=>S.data.filter(i=>new Date(i.date)>=since&&(r==="all"?i.region!=="other":i.region===r)).length;
-  $("tabs").innerHTML="";
-  ["all","hormuz","gulf","oman","bab"].forEach(r=>{const x=document.createElement("button");x.setAttribute("aria-pressed",r===S.region);x.innerHTML=`${REG[r]}<b>${cnt(r)}</b>`;x.onclick=()=>{S.region=r;S.shown=30;render()};$("tabs").append(x)});
-  $("cats").innerHTML="";
-  CHIPS.forEach(([k,l])=>{const x=document.createElement("button");x.className="chip";x.textContent=l;x.setAttribute("aria-pressed",k===S.cat);x.onclick=()=>{S.cat=k;S.shown=30;render()};$("cats").append(x)});
-  // الأرقام
-  $("n-all").textContent=b.length;
-  $("n-att").textContent=b.filter(i=>i.category==="attack").length;
-  $("n-pir").textContent=b.filter(i=>i.piracy).length;
-  $("n-last").textContent=b[0]?ago(b[0].date):"—";
-  // الأعمدة: 14 يومًا
-  const days=[...Array(14)].map((_,k)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-13+k);return d});
-  const per=days.map(d=>{const e=new Date(d);e.setDate(e.getDate()+1);return b.filter(i=>{const t=new Date(i.date);return t>=d&&t<e})});
+/* ---------- الأعمدة: تتبع الفترة المختارة ---------- */
+function renderBars(b){
+  const today=new Date();today.setHours(0,0,0,0);
+  let spanDays=S.days;
+  if(!spanDays){const old=Math.min(...S.data.map(i=>+new Date(i.date)));spanDays=isFinite(old)?Math.max(7,Math.ceil((Date.now()-old)/864e5)):30}
+  const step=spanDays<=31?1:7, n=Math.ceil(spanDays/step);
+  const starts=[...Array(n)].map((_,k)=>{const d=new Date(today);d.setDate(d.getDate()-(n-1-k)*step-(step-1));return d});
+  const per=starts.map(d=>{const e=new Date(d);e.setDate(e.getDate()+step);return b.filter(i=>{const t=new Date(i.date);return t>=d&&t<e})});
   const mx=Math.max(1,...per.map(a=>a.length));
-  $("bars").innerHTML=per.map((a,k)=>{const seg=["attack","piracy","suspicious","advisory","other"].map(c=>{const n=a.filter(i=>(c==="piracy"?(i.category==="piracy"):i.category===c)).length;return n?`<i style="height:${n/mx*100}%;background:${COL[c]}"></i>`:""}).join("");return `<div class="col" title="${fmtD(days[k])}: ${a.length}">${seg||'<i style="height:3px;background:var(--line)"></i>'}</div>`}).join("");
-  $("ax1").textContent=fmtD(days[0]);$("ax2").textContent=fmtD(days[13]);
-  // القائمة
+  $("bars").className="bars"+(n>20?" dense":"");
+  $("bars").innerHTML=per.map((a,k)=>{
+    const seg=["attack","piracy","suspicious","advisory","other"].map(c=>{const m=a.filter(i=>segOf(i)===c).length;return m?`<i style="height:${m/mx*100}%;background:${COL[c]}"></i>`:""}).join("");
+    const lbl=step===1?fmtD(starts[k]):`أسبوع ${fmtD(starts[k])}`;
+    return `<div class="col" title="${lbl}: ${a.length}">${seg||'<i style="height:3px;background:var(--line)"></i>'}</div>`}).join("");
+  $("ax1").textContent=fmtD(starts[0]);$("ax2").textContent=step===1?fmtD(starts[n-1]):"هذا الأسبوع";
+  const span=S.days?`آخر ${unit(S.days,"يوم","يومين","أيام","يومًا")}`:"كل الأرشيف";
+  $("bar-title").textContent=`الحوادث ${step===1?"يوميًا":"أسبوعيًا"} · ${span}`;
+}
+
+/* ---------- الخريطة ---------- */
+let map,layer,markers={};
+function initMap(){
+  if(!window.L){$("map").innerHTML='<div class="empty" style="padding:30px;direction:rtl;text-align:center">تعذّر تحميل الخريطة.</div>';return}
+  map=L.map("map",{zoomControl:true,attributionControl:true,scrollWheelZoom:false,worldCopyJump:true}).fitBounds(BOUNDS.all);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{subdomains:"abcd",maxZoom:12,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}).addTo(map);
+  map.on("focus",()=>map.scrollWheelZoom.enable());map.on("blur",()=>map.scrollWheelZoom.disable());
+  layer=L.layerGroup().addTo(map);
+}
+let lastFit=null;
+function renderMap(f){
+  if(!map)return;
+  layer.clearLayers();markers={};
+  const pts=f.filter(i=>Number.isFinite(+i.lat)&&Number.isFinite(+i.lon)&&i.lat!==null&&i.lon!==null);
+  // الأقدم أولًا حتى تظهر الأحدث فوقها
+  [...pts].reverse().forEach(i=>{
+    const c=HEX[segOf(i)],ll=[+i.lat,+i.lon],recent=Date.now()-new Date(i.date)<864e5;
+    if(recent)L.circleMarker(ll,{radius:9,color:c,weight:2,fill:false,interactive:false,className:"recent-ring"}).addTo(layer);
+    const m=L.circleMarker(ll,{radius:recent?8:6,color:"#0a1017",weight:1.5,fillColor:c,fillOpacity:.9}).addTo(layer);
+    m.bindPopup(()=>popupOf(i),{maxWidth:280});
+    markers[keyOf(i)]=m;
+  });
+  $("map-count").textContent=`${pts.length} على الخريطة`+(pts.length<f.length?` · ${f.length-pts.length} بلا إحداثيات`:"");
+  if(lastFit!==S.region){lastFit=S.region;map.fitBounds(BOUNDS[S.region]||BOUNDS.all)}
+}
+function popupOf(i){
+  const w=whereOf(i),d=document.createElement("div"),s=segOf(i);
+  d.innerHTML=`<div><span class="pop-tag" style="--c:${COL[s]}">${CAT[i.category]||esc(i.type)}</span> · ${esc(VES[i.vessel_type]||"سفينة")}</div>
+    <div class="pop-sub">${fmtD(i.date)} · ${fmtT(i.date)} (${ago(i.date)})</div>
+    <div class="pop-sub">${esc(w.pre)}<bdi>${esc(w.place)}</bdi></div>
+    <div class="pop-sub">تحذير رقم ${esc(i.number||"—")} · ${esc(REG[i.region]||"")}</div>`;
+  const b=document.createElement("button");b.className="pop-btn";b.textContent="عرض نص البلاغ";
+  b.onclick=()=>openItem(keyOf(i));d.append(b);return d;
+}
+function openItem(k){
+  let li=document.getElementById("inc-"+k);
+  if(!li){ // قد يكون خارج المعروض حاليًا
+    const f=base().filter(matchCat),idx=f.findIndex(i=>keyOf(i)===k);
+    if(idx>=S.shown){S.shown=idx+1;renderFeed(f)}
+    li=document.getElementById("inc-"+k);
+  }
+  if(!li)return;
+  li.querySelector("details").open=true;
+  li.scrollIntoView({behavior:"smooth",block:"center"});
+  li.classList.remove("hl");void li.offsetWidth;li.classList.add("hl");
+}
+function showOnMap(i){
+  const m=markers[keyOf(i)];if(!m||!map)return;
+  $("map").scrollIntoView({behavior:"smooth",block:"center"});
+  map.flyTo(m.getLatLng(),Math.max(map.getZoom(),8),{duration:.8});
+  setTimeout(()=>m.openPopup(),850);
+}
+
+/* ---------- القائمة ---------- */
+function renderFeed(f){
   const feed=$("feed");feed.innerHTML="";
   if(!f.length){feed.innerHTML='<li class="empty">لا توجد حوادث مطابقة في هذه الفترة. جرّب فترة أطول أو منطقة أخرى.</li>'}
   f.slice(0,S.shown).forEach(i=>{
-    const li=document.createElement("li");li.className="item";
-    const ves=VES[i.vessel_type]||"سفينة";
+    const li=document.createElement("li");li.className="item";li.id="inc-"+keyOf(i);
+    const ves=VES[i.vessel_type]||"سفينة",s=segOf(i);
     const d=document.createElement("details");
-    const flags=(i.late_hours>4?`<span class="flag">بلاغ متأخر ${Math.round(i.late_hours)} ساعة</span>`:"")+(i.reclassified?'<span class="flag">أُعيد تصنيفه</span>':"")+(i.pirate_control?'<span class="flag">سفينة تحت سيطرة المهاجمين</span>':"");
-    d.innerHTML=`<summary style="--c:${COL[i.category]}"><span class="edge"></span>
+    const flags=(i.late_hours>4?`<span class="flag">بلاغ متأخر ${Math.round(i.late_hours)} ساعة</span>`:"")+(i.reclassified?'<span class="flag">أُعيد تصنيفه</span>':"")+(i.pirate_control?'<span class="flag">سفينة تحت سيطرة المهاجمين</span>':"")+(i.piracy&&i.category==="attack"?'<span class="flag">مؤشرات قرصنة</span>':"");
+    d.innerHTML=`<summary style="--c:${COL[s]}"><span class="edge"></span>
       <div class="when"><b>${fmtD(i.date)}</b>${fmtT(i.date)}</div>
-      <div><div class="head"><span class="tag">${CAT[i.category]}</span>${ves} · ${REG[i.region]}${flags}</div><div class="sub"></div></div></summary>
+      <div><div class="head"><span class="tag">${CAT[i.category]||esc(i.type)}</span>${ves} · ${REG[i.region]||""}${flags}</div><div class="sub"></div></div></summary>
       <div class="det"><div></div><pre></pre></div>`;
     const w=whereOf(i),sub=d.querySelector(".sub");sub.append(w.pre);const bd=document.createElement("bdi");bd.textContent=w.place;sub.append(bd);
-    d.querySelector(".det div").textContent=`تحذير رقم ${i.number||"—"} · ${i.type}${i.lat!=null?` · ${(+i.lat).toFixed(2)}, ${(+i.lon).toFixed(2)}`:""}`;
+    d.querySelector(".det div").textContent=`تحذير رقم ${i.number||"—"} · ${i.type}${i.lat!=null?` · ${(+i.lat).toFixed(2)}, ${(+i.lon).toFixed(2)}`:""} `;
+    if(i.lat!=null&&i.lon!=null){const b=document.createElement("button");b.className="pop-btn";b.textContent="على الخريطة";b.onclick=()=>showOnMap(i);d.querySelector(".det div").append(b)}
     d.querySelector("pre").textContent=i.text;
     li.append(d);feed.append(li);
   });
   $("more").hidden=f.length<=S.shown;
 }
-$("more").onclick=()=>{S.shown+=30;render()};
+
+function render(){
+  const b=base(), f=b.filter(matchCat), s=since();
+  const cnt=r=>S.data.filter(i=>new Date(i.date)>=s&&inRegion(i,r)).length;
+  $("tabs").innerHTML="";
+  ["all","hormuz","gulf","oman","bab"].forEach(r=>{const x=document.createElement("button");x.setAttribute("aria-pressed",r===S.region);x.innerHTML=`${REG[r]}<b>${cnt(r)}</b>`;x.onclick=()=>{S.region=r;S.shown=30;render()};$("tabs").append(x)});
+  $("cats").innerHTML="";
+  CHIPS.forEach(([k,l])=>{const x=document.createElement("button");x.className="chip";x.textContent=l;x.setAttribute("aria-pressed",k===S.cat);x.onclick=()=>{S.cat=k;S.shown=30;render()};$("cats").append(x)});
+  $("n-all").textContent=b.length;
+  $("n-att").textContent=b.filter(i=>i.category==="attack").length;
+  $("n-pir").textContent=b.filter(i=>i.piracy).length;
+  $("n-last").textContent=b[0]?ago(b[0].date):"—";
+  renderBars(b);
+  renderMap(f);
+  renderFeed(f);
+  renderWW();
+}
+$("more").onclick=()=>{S.shown+=30;renderFeed(base().filter(matchCat))};
 $("days").onchange=e=>{S.days=+e.target.value;S.shown=30;render()};
+
+/* ---------- Windward ---------- */
+const RISK={Low:"منخفض",Moderate:"متوسط",Medium:"متوسط",High:"مرتفع",Dark:"مظلمة"};
+const KIND={attack:"استهداف","near-miss":"اقتراب",miss:"اقتراب"};
+function delta(p){if(p==null)return"";const up=p>0;return `<div class="small"><span class="${up?"up":"down"}">${up?"↑":"↓"} ${Math.abs(p)}%</span> عن متوسط 7 أيام</div>`}
+function renderWW(){
+  const w=S.ww;if(!w){$("ww").hidden=true;return}
+  $("ww").hidden=false;
+  const asOf=w.data_as_of?new Date(w.data_as_of+"T00:00:00"):null;
+  $("ww-stamp").textContent=`المصدر: Windward · بيانات ${asOf?asOf.toLocaleDateString("ar-u-nu-latn",{day:"numeric",month:"long",year:"numeric"}):"—"}`;
+  const stale=asOf&&(Date.now()-asOf)>2.5*864e5;
+  $("ww-notice").textContent=stale?`آخر بيانات متاحة من Windward عمرها ${unit(Math.floor((Date.now()-asOf)/864e5),"يوم","يومين","أيام","يومًا")}، وقد لا تعكس الوضع الحالي.`:"";
+  $("ww-notice").className="notice"+(stale?" on":"");
+
+  // العبور
+  const t=w.transits||{},inb=t.inbound||{},out=t.outbound||{};
+  const vrow=v=>`<li><bdi dir="ltr">${esc(v.name)}</bdi> <span class="small">${esc(v.class||"")}${v.flag?" · "+esc(v.flag):""}</span>${v.risk?`<span class="risk ${esc(v.risk)}">${esc(RISK[v.risk]||v.risk)}</span>`:""}</li>`;
+  const vs=[...(inb.vessels||[]).map(v=>({...v,dir:"دخول"})),...(out.vessels||[]).map(v=>({...v,dir:"خروج"}))];
+  $("ww-transit").innerHTML=`<h3>العبور في مضيق هرمز اليوم</h3>
+    <div class="kv">
+      <div><small>دخول إلى الخليج</small><strong>${fmtN(inb.count)}</strong><div class="small">منها مظلمة: <span class="dark-n">${fmtN(inb.dark)}</span></div></div>
+      <div><small>خروج من الخليج</small><strong>${fmtN(out.count)}</strong><div class="small">منها مظلمة: <span class="dark-n">${fmtN(out.dark)}</span></div></div>
+    </div>
+    <div class="small" style="margin-top:6px">السفن المظلمة أطفأت جهاز التتبع (AIS) أثناء العبور.</div>
+    ${vs.length?`<details style="margin-top:8px"><summary class="more-link" style="list-style:none;cursor:pointer">قائمة السفن (${vs.length})</summary>
+      <ul class="mini vlist">${vs.map(v=>vrow(v).replace("<li>",`<li><span class="small">${v.dir} · </span>`)).join("")}</ul></details>`:""}`;
+
+  // GPS
+  const g=w.gps||{},gr=(name,x)=>!x?"":`<div class="row-title">${name}</div>
+    <div class="kv">
+      <div><small>سفن تعرّضت للتشويش</small><strong>${fmtN(x.jammed_vessels)}</strong>${delta(x.change_vs_7d_pct)}</div>
+      <div><small>لقاءات وهمية (مواقع مزيّفة)</small><strong>${fmtN(x.false_meetings)}</strong></div>
+    </div>${x.transmitting?`<div class="small">من أصل ${fmtN(x.transmitting)} سفينة ترسل موقعها</div>`:""}`;
+  $("ww-gps").innerHTML=`<h3>التشويش على GPS</h3>${gr("الخليج العربي",g.gulf)}${gr("البحر الأحمر",g.red_sea)}`;
+
+  // الاستهداف
+  const a=w.attacks||{},items=(a.items||[]).filter(x=>S.region==="all"||x.region===S.region);
+  const lim=S.wwAll?items.length:5;
+  $("ww-att").innerHTML=`<h3>سفن مستهدفة منذ بداية النزاع</h3>
+    <div class="kv">
+      <div><small>الإجمالي</small><strong>${fmtN(a.total)}</strong></div>
+      <div><small>إصابة مباشرة / اقتراب</small><strong style="font-size:1.25em"><span style="color:var(--c-attack)">${fmtN(a.attack)}</span> / <span style="color:var(--c-susp)">${fmtN(a.near_miss)}</span></strong></div>
+    </div>
+    <div class="row-title">${S.region==="all"?"الأحدث":"الأحدث في "+REG[S.region]}</div>
+    ${items.length?`<ul class="mini">${items.slice(0,lim).map(x=>{const k=/miss/.test(x.kind||"")?"near-miss":"attack";
+      return `<li style="--c:${k==="attack"?"var(--c-attack)":"var(--c-susp)"}"><details><summary><span class="t">${KIND[k]}</span><bdi dir="ltr">${esc(x.name)}</bdi>${x.new?'<span class="flag">جديد</span>':""}
+      <div class="small">${x.date?fmtD(x.date):"—"}${x.place?` · <bdi dir="ltr">${esc(x.place)}</bdi>`:""}</div></summary>${x.text?`<p>${esc(x.text)}</p>`:""}</details></li>`}).join("")}</ul>
+      ${items.length>5?`<button class="more-link" id="ww-more">${S.wwAll?"عرض أقل":`عرض الكل (${items.length})`}</button>`:""}`
+      :'<div class="small">لا توجد سفن مستهدفة في هذه المنطقة ضمن القائمة.</div>'}`;
+  const mb=$("ww-more");if(mb)mb.onclick=()=>{S.wwAll=!S.wwAll;renderWW()};
+}
 
 async function load(){
   try{
@@ -181,8 +411,15 @@ async function load(){
     $("notice").textContent="تعذّر تحميل data.json، والمعروض الآن بيانات تجريبية. إن فتحت الملف من الحاسوب مباشرة فهذا متوقع، شغّله عبر GitHub Pages أو خادم محلي.";
     $("notice").className="notice on";
   }
+  try{
+    const r=await fetch("windward.json?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok)throw new Error(r.status);
+    const w=await r.json();
+    S.ww=(w&&w.transits&&w.gps&&w.attacks)?w:null;
+  }catch(e){S.ww=null}
   render();
 }
+initMap();
 load();setInterval(load,5*60*1000);
 </script>
 </body>

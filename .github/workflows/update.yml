@@ -1,4 +1,4 @@
-name: تحديث بيانات UKMTO ونشر الصفحة
+name: تحديث بيانات UKMTO وWindward ونشر الصفحة
 
 on:
   schedule:
@@ -27,11 +27,31 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: جلب البيانات وبناء الموقع
+
+      - name: تنزيل النسخة المنشورة حاليًا (للأرشيف والاحتياط)
+        run: |
+          mkdir -p prev
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          REPO="${GITHUB_REPOSITORY#*/}"
+          PAGES_URL="https://${OWNER}.github.io/${REPO}"
+          curl -fsSL "$PAGES_URL/data.json" -o prev/data.json || echo "لا توجد نسخة سابقة من data.json"
+          curl -fsSL "$PAGES_URL/windward.json" -o prev/windward.json || echo "لا توجد نسخة سابقة من windward.json"
+
+      - name: جلب بلاغات UKMTO مع الإبقاء على الأرشيف
         run: |
           mkdir -p site
-          python fetch_ukmto.py --out site/data.json
-          cp index.html site/index.html
+          python fetch_ukmto.py --merge prev/data.json --out site/data.json
+
+      - name: جلب الوضع اليومي من Windward (لا يوقف النشر إذا فشل)
+        run: |
+          if ! python fetch_windward.py --out site/windward.json; then
+            echo "::warning::فشل جلب Windward، أُبقي على آخر نسخة منشورة"
+            if [ -s prev/windward.json ]; then cp prev/windward.json site/windward.json; fi
+          fi
+
+      - name: بناء الموقع
+        run: cp index.html site/index.html
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
