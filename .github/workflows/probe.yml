@@ -10,17 +10,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          exec > probe_out.txt 2>&1
-          UA="maritime-dashboard/1.0 (personal use)"
-          for u in https://www.ukmto.org/partner-products/jmic-products/jmic-advisories https://www.ukmto.org/partner-products/jmic-products/weekly-dashboard; do
-            echo "=== $u"; curl -sL -A "$UA" "$u" -o p.html; wc -c p.html
-            grep -oE '(https?://[^"'"'"' ]*|/)[^"'"'"' ]*(api|sccd|\.json|\.pdf|graphql)[^"'"'"' <]*' p.html | sort -u | head -40
-            grep -oE 'data-[a-z-]+="[^"]{0,120}"' p.html | sort -u | head -20
-          done
-          echo "=== scripts"; grep -oE 'src="[^"]+\.js[^"]*"' p.html | head
-          for a in products jmic partnerproducts ukmto/products ukmto/partnerproducts jmic/advisories; do
-            code=$(curl -s -o r.json -w "%{http_code}" -A "$UA" "https://sccd.royalnavy.mod.uk/api/$a"); echo "api/$a -> $code $(head -c 200 r.json)"; done
-      - run: |
-          cp p.html probe_page.html || true
+          pip install -q playwright && python -m playwright install --with-deps chromium >/dev/null
+          cat > s.py <<'PY'
+          import asyncio
+          from playwright.async_api import async_playwright
+          U="https://abdulbahrain38.github.io/maritime-dashboard/?v=2"
+          async def main():
+            async with async_playwright() as p:
+              b=await p.chromium.launch(args=["--use-gl=angle","--use-angle=swiftshader","--ignore-gpu-blocklist"])
+              out=open("probe_out.txt","w")
+              for theme in ("light","dark"):
+                c=await b.new_context(viewport={"width":1280,"height":900},color_scheme=theme)
+                pg=await c.new_page();errs=[]
+                pg.on("pageerror",lambda e:errs.append(str(e)));pg.on("console",lambda m:m.type=="error" and errs.append(m.text))
+                await pg.goto(U,wait_until="networkidle");await pg.wait_for_timeout(6000)
+                await pg.screenshot(path=f"shot_{theme}.png",full_page=True)
+                el=await pg.query_selector(".theatre");await el.screenshot(path=f"theatre_{theme}.png")
+                el=await pg.query_selector(".mapbox");await el.screenshot(path=f"leaf_{theme}.png")
+                await pg.evaluate("tmap.flyTo({center:[50.6,26.2],zoom:8,duration:0})");await pg.wait_for_timeout(5000)
+                el=await pg.query_selector(".theatre");await el.screenshot(path=f"theatre_zoom_{theme}.png")
+                out.write(f"{theme}: errors={errs}\n")
+              await b.close()
+          asyncio.run(main())
+          PY
+          python s.py || true
           git config user.name probe; git config user.email probe@x
-          git add probe_out.txt probe_page.html; git commit -m "probe results"; git push
+          git add -f *.png probe_out.txt; git commit -qm "screens"; git push -q
