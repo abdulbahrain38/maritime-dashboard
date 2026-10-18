@@ -76,7 +76,7 @@ html:not(.no-majalla) .leaflet-popup-content{font-size:18px}
 /* خريطة المسرح البحري (فاتحة) */
 .theatre{margin:0 0 24px}
 .theatre .ww-head{margin-bottom:10px}
-.tbox{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#cfe0ee}
+.tbox{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#bcd5ea}
 #theatre{height:620px;direction:ltr}
 .grat{position:absolute;inset:0;pointer-events:none;overflow:hidden;font:600 12px/1 Tahoma,sans-serif;color:#2d5a86;direction:ltr}
 .grat span{position:absolute;background:#ffffffd9;border-radius:3px;padding:3px 5px;white-space:nowrap}
@@ -434,7 +434,7 @@ const SEAS=[["الخليج العربي",51.4,27.1,15],["مضيق هرمز",56.5
 let tmap=null,tReady=false,tData=[],tLastFit=null;
 function initTheatre(){
   if(!window.maplibregl){$("theatre").innerHTML='<div class="empty" style="padding:30px;direction:rtl;text-align:center">تعذّر تحميل الخريطة.</div>';return}
-  try{maplibregl.setRTLTextPlugin("https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js",true)}catch(e){}
+  try{maplibregl.setRTLTextPlugin("https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",true)}catch(e){}
   tmap=new maplibregl.Map({container:"theatre",style:"https://tiles.openfreemap.org/styles/positron",
     bounds:THEATRE,fitBoundsOptions:{padding:10},maxBounds:[[15,-8],[85,42]],minZoom:3,maxZoom:14,
     dragRotate:false,pitchWithRotate:false,cooperativeGestures:false,attributionControl:{compact:true}});
@@ -446,6 +446,14 @@ function initTheatre(){
   tmap.on("load",()=>{
     // أسماء عربية لكل الطبقات، وإخفاء أسماء البحار الأصلية لصالح أسمائنا
     for(const l of tmap.getStyle().layers){
+      // ألوان قريبة من الخرائط البحرية: ماء أزرق ويابسة بلون رملي وحدود أوضح
+      try{
+        if(l.type==="background")tmap.setPaintProperty(l.id,"background-color","#f2ede4");
+        else if(l.type==="fill"&&l["source-layer"]==="water")tmap.setPaintProperty(l.id,"fill-color","#bcd5ea");
+        else if(l.type==="line"&&l["source-layer"]==="waterway")tmap.setPaintProperty(l.id,"line-color","#a9c8e2");
+        else if(l.type==="line"&&l["source-layer"]==="boundary"){tmap.setPaintProperty(l.id,"line-color","#8b97a5");tmap.setPaintProperty(l.id,"line-opacity",.9)}
+        else if(l.type==="fill"&&(l["source-layer"]==="landcover"||l["source-layer"]==="landuse"||l["source-layer"]==="park"))tmap.setPaintProperty(l.id,"fill-opacity",.35);
+      }catch(e){}
       if(l.type!=="symbol"||!(l.layout&&l.layout["text-field"]))continue;
       if(l["source-layer"]==="water_name"){tmap.setLayoutProperty(l.id,"visibility","none");continue}
       tmap.setLayoutProperty(l.id,"text-field",["coalesce",["get","name:ar"],["get","name"]]);
@@ -454,7 +462,7 @@ function initTheatre(){
     tmap.addLayer({id:"grat",type:"line",source:"grat",paint:{"line-color":"#5a7a99","line-opacity":.55,"line-width":1,"line-dasharray":[3,3]}});
     tmap.addSource("seas",{type:"geojson",data:{type:"FeatureCollection",features:SEAS.map(([n,x,y,sz])=>({type:"Feature",properties:{n,sz},geometry:{type:"Point",coordinates:[x,y]}}))}});
     tmap.addLayer({id:"seas",type:"symbol",source:"seas",layout:{"text-field":["get","n"],"text-font":["Noto Sans Regular"],"text-size":["interpolate",["linear"],["zoom"],3,["*",["get","sz"],.8],7,["*",["get","sz"],1.4]],"text-letter-spacing":.05,"text-allow-overlap":false},
-      paint:{"text-color":"#3a6c99","text-halo-color":"#ffffffcc","text-halo-width":1.2}});
+      paint:{"text-color":"#2c5f8f","text-halo-color":"#e6f0f8","text-halo-width":1.2}});
     tmap.addSource("inc",{type:"geojson",data:{type:"FeatureCollection",features:[]}});
     tmap.addLayer({id:"inc-halo",type:"circle",source:"inc",filter:["==",["get","recent"],true],
       paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,10,9,18],"circle-color":["get","color"],"circle-opacity":.22}});
@@ -491,9 +499,9 @@ function drawGrat(){
   const x0=Math.floor(b.getWest()/st)*st,x1=Math.ceil(b.getEast()/st)*st,y0=Math.floor(b.getSouth()/st)*st,y1=Math.ceil(b.getNorth()/st)*st;
   let html="";
   for(let x=x0;x<=x1+1e-9;x+=st){const v=+x.toFixed(4);f.push({type:"Feature",geometry:{type:"LineString",coordinates:[[v,y0-st],[v,y1+st]]}});
-    const p=tmap.project([v,b.getSouth()]);if(p.x>40&&p.x<W-40)html+=`<span style="left:${p.x}px;bottom:4px;transform:translateX(-50%)">${glabel(v,"E","W")}</span>`}
+    const p=tmap.project([v,b.getSouth()]);if(p.x>90&&p.x<W-70)html+=`<span style="left:${p.x}px;top:4px;transform:translateX(-50%)">${glabel(v,"E","W")}</span>`}
   for(let y=y0;y<=y1+1e-9;y+=st){const v=+y.toFixed(4);f.push({type:"Feature",geometry:{type:"LineString",coordinates:[[x0-st,v],[x1+st,v]]}});
-    const p=tmap.project([b.getEast(),v]);if(p.y>30&&p.y<H-60)html+=`<span style="right:4px;top:${p.y}px;transform:translateY(-50%)">${glabel(v,"N","S")}</span>`}
+    const p=tmap.project([b.getEast(),v]);if(p.y>34&&p.y<H-50)html+=`<span style="right:4px;top:${p.y}px;transform:translateY(-50%)">${glabel(v,"N","S")}</span>`}
   box.innerHTML=html;
   if(tReady)tmap.getSource("grat").setData({type:"FeatureCollection",features:f});
 }
