@@ -14,7 +14,7 @@ jobs:
           cat > s.py <<'PY'
           import asyncio
           from playwright.async_api import async_playwright
-          U="https://abdulbahrain38.github.io/maritime-dashboard/?v=2"
+          U="https://abdulbahrain38.github.io/maritime-dashboard/?v=3"
           async def main():
             async with async_playwright() as p:
               b=await p.chromium.launch(args=["--use-gl=angle","--use-angle=swiftshader","--ignore-gpu-blocklist"])
