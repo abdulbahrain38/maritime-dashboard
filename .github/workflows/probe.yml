@@ -2,11 +2,15 @@ name: probe
 on:
   push:
     branches: [probe-jmic]
+permissions:
+  contents: write
 jobs:
   p:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - run: |
+          exec > probe_out.txt 2>&1
           UA="maritime-dashboard/1.0 (personal use)"
           for u in https://www.ukmto.org/partner-products/jmic-products/jmic-advisories https://www.ukmto.org/partner-products/jmic-products/weekly-dashboard; do
             echo "=== $u"; curl -sL -A "$UA" "$u" -o p.html; wc -c p.html
@@ -16,3 +20,7 @@ jobs:
           echo "=== scripts"; grep -oE 'src="[^"]+\.js[^"]*"' p.html | head
           for a in products jmic partnerproducts ukmto/products ukmto/partnerproducts jmic/advisories; do
             code=$(curl -s -o r.json -w "%{http_code}" -A "$UA" "https://sccd.royalnavy.mod.uk/api/$a"); echo "api/$a -> $code $(head -c 200 r.json)"; done
+      - run: |
+          cp p.html probe_page.html || true
+          git config user.name probe; git config user.email probe@x
+          git add probe_out.txt probe_page.html; git commit -m "probe results"; git push
