@@ -6,6 +6,7 @@
 <title>مركز العمليات والأخبار البحرية</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
 :root{--bg:#0a1017;--panel:#111a24;--line:#1f2d3d;--text:#dde7f3;--mute:#8497ad;--sel:#4fd1c5;
 --c-attack:#ff6b5b;--c-piracy:#c58cff;--c-susp:#f2b84b;--c-adv:#6fa8dc;--c-mute:#8497ad;
@@ -13,6 +14,13 @@
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 /* إذا لم يكن خط Sakkal Majalla مثبتًا على الجهاز (مثل الجوال) يُستخدم IBM Plex بحجم مناسب */
 html.no-majalla{--fs:15px}
+/* الوضع النهاري */
+:root[data-theme=light]{--bg:#f3f5f8;--panel:#ffffff;--line:#d8e0e9;--text:#15202c;--mute:#5a6a7c;--sel:#0e8a7f;
+--c-attack:#d8392b;--c-piracy:#8b4fd6;--c-susp:#b57400;--c-adv:#2b6fb6;--c-mute:#6b7b8d;--on-sel:#ffffff;--hl:#0e8a7f22;--map-bg:#e9eef3}
+:root{--on-sel:#06121a;--hl:#4fd1c522;--map-bg:#0d141c}
+.theme-btn{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px 12px;color:var(--text);font-size:.85em}
+.theme-btn svg{width:16px;height:16px}
+.head-end{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:400 var(--fs)/1.65 var(--font)}
 button,select{font-family:var(--font)}
@@ -43,7 +51,7 @@ h2{margin:0;font-size:1.2em;font-weight:700}
 
 /* الخريطة */
 .mapbox{position:relative;margin:4px 0 22px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
-#map{height:430px;direction:ltr;background:#0d141c}
+#map{height:430px;direction:ltr;background:var(--map-bg)}
 .legend{display:flex;flex-wrap:wrap;gap:4px 16px;padding:8px 12px;border-top:1px solid var(--line);font-size:.82em;color:var(--mute)}
 .legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-inline-end:6px;vertical-align:middle}
 .legend .ring::before{background:none;border:2px solid var(--text);width:8px;height:8px}
@@ -52,7 +60,7 @@ h2{margin:0;font-size:1.2em;font-weight:700}
 .leaflet-popup-content{margin:10px 14px;font-size:15px;line-height:1.55;direction:rtl;text-align:right;min-width:200px}
 html:not(.no-majalla) .leaflet-popup-content{font-size:18px}
 .leaflet-container a.leaflet-popup-close-button{color:var(--mute)}
-.leaflet-control-attribution{background:#0a1017cc!important;color:var(--mute)!important;font-family:Tahoma,sans-serif}
+.leaflet-control-attribution{background:color-mix(in srgb,var(--bg) 80%,transparent)!important;color:var(--mute)!important;font-family:Tahoma,sans-serif}
 .leaflet-control-attribution a{color:var(--mute)!important}
 .leaflet-bar a{background:var(--panel);color:var(--text);border-color:var(--line)}
 .leaflet-control-layers{background:var(--panel);color:var(--text);border:1px solid var(--line)!important;font-size:15px;direction:rtl;text-align:right}
@@ -64,6 +72,25 @@ html:not(.no-majalla) .leaflet-popup-content{font-size:18px}
 .pop-btn{margin-top:6px;background:none;border:1px solid var(--line);border-radius:5px;padding:1px 10px;color:var(--sel)}
 .recent-ring{animation:ring 2.2s ease-out infinite;transform-origin:center;transform-box:fill-box}
 @keyframes ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(2.6)}}
+
+/* خريطة المسرح البحري (فاتحة) */
+.theatre{margin:0 0 24px}
+.theatre .ww-head{margin-bottom:10px}
+.tbox{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#cfe0ee}
+#theatre{height:620px;direction:ltr}
+.grat{position:absolute;inset:0;pointer-events:none;overflow:hidden;font:600 12px/1 Tahoma,sans-serif;color:#2d5a86;direction:ltr}
+.grat span{position:absolute;background:#ffffffd9;border-radius:3px;padding:3px 5px;white-space:nowrap}
+.coord{position:absolute;bottom:0;left:0;z-index:2;background:#1e2b3acc;color:#fff;font:13px/1 Tahoma,sans-serif;padding:7px 12px;border-top-right-radius:8px;direction:ltr;pointer-events:none;white-space:nowrap}
+.tbox .maplibregl-ctrl-bottom-left{bottom:30px}
+.tbox .maplibregl-ctrl-scale{background:#ffffffe6;color:#15202c;border-color:#15202c;font:12px Tahoma,sans-serif}
+.tbox .maplibregl-ctrl-attrib{font:11px Tahoma,sans-serif}
+.maplibregl-popup-content{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 14px;direction:rtl;text-align:right;font-family:var(--font);font-size:15px;line-height:1.55;min-width:210px}
+html:not(.no-majalla) .maplibregl-popup-content{font-size:18px}
+.maplibregl-popup-tip{border-top-color:var(--panel)!important;border-bottom-color:var(--panel)!important}
+.maplibregl-popup-close-button{color:var(--mute);font-size:18px;left:0;right:auto}
+.tlegend{display:flex;flex-wrap:wrap;gap:4px 16px;padding:8px 12px;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px;margin-top:-1px;font-size:.82em;color:var(--mute);background:var(--panel)}
+.tlegend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-inline-end:6px;vertical-align:middle;border:1.5px solid #fff;box-shadow:0 0 0 1px #0003}
+@media(max-width:700px){#theatre{height:460px}.coord{font-size:11.5px;padding:6px 9px}}
 
 /* Windward */
 .ww{margin:0 0 24px}
@@ -96,14 +123,14 @@ html:not(.no-majalla) .leaflet-popup-content{font-size:18px}
 
 .filters{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:6px 0 14px}
 .chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px 13px;font-size:.9em;color:var(--mute)}
-.chip[aria-pressed=true]{color:#06121a;background:var(--sel);border-color:var(--sel);font-weight:700}
+.chip[aria-pressed=true]{color:var(--on-sel);background:var(--sel);border-color:var(--sel);font-weight:700}
 select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:.9em}
 .feed{list-style:none;margin:0;padding:0}
 .item{border-top:1px solid var(--line)}
 .item summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:4px 92px 1fr;gap:0 14px;padding:12px 0}
 .item summary::-webkit-details-marker{display:none}
 .item.hl{animation:hl 1.6s ease-out}
-@keyframes hl{0%{background:#4fd1c522}100%{background:transparent}}
+@keyframes hl{0%{background:var(--hl)}100%{background:transparent}}
 .edge{border-radius:2px;background:var(--c)}
 .when{font-size:.82em;color:var(--mute);line-height:1.5}
 .when b{display:block;color:var(--text);font-weight:500;font-size:1.1em}
@@ -139,6 +166,10 @@ footer{color:var(--mute);font-size:.82em;border-top:1px solid var(--line);paddin
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important}}
 </style>
 <script>
+// تطبيق الوضع المحفوظ قبل رسم الصفحة لتجنّب الوميض
+(function(){let t=null;try{t=localStorage.getItem("theme")}catch(e){}
+if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";
+document.documentElement.dataset.theme=t})();
 // هل خط Sakkal Majalla مثبت؟ نقارن عرض نص عربي بالخط وبدونه
 (function(){try{const c=document.createElement("canvas").getContext("2d"),t="مركز العمليات البحرية ١٢٣";
 c.font="40px monospace";const a=c.measureText(t).width;c.font='40px "Sakkal Majalla",monospace';const b=c.measureText(t).width;
@@ -149,7 +180,10 @@ if(Math.abs(a-b)<0.5)document.documentElement.classList.add("no-majalla")}catch(
 <div class="wrap">
 <header>
   <h1>مركز العمليات والأخبار البحرية</h1>
-  <div class="stamp">آخر تغيير في البيانات: <time id="stamp">—</time></div>
+  <div class="head-end">
+    <div class="stamp">آخر تغيير في البيانات: <time id="stamp">—</time></div>
+    <button class="theme-btn" id="theme-btn" type="button"></button>
+  </div>
 </header>
 <div class="notice" id="notice"></div>
 <nav class="tabs" id="tabs" aria-label="المناطق"></nav>
@@ -177,6 +211,25 @@ if(Math.abs(a-b)<0.5)document.documentElement.classList.add("no-majalla")}catch(
     <span style="--c:var(--c-adv)">تنبيه</span>
     <span class="ring">خلال آخر 24 ساعة</span>
     <span id="map-count" style="margin-inline-start:auto"></span>
+  </div>
+</section>
+
+<section class="theatre" aria-label="خريطة المسرح البحري">
+  <div class="ww-head">
+    <h2>خريطة المسرح البحري</h2>
+    <div class="small">من الخليج العربي حتى البحر الأحمر · اسحب للتنقل واستخدم العجلة أو اللمس للتكبير</div>
+  </div>
+  <div class="tbox">
+    <div id="theatre"></div>
+    <div class="grat" id="grat"></div>
+    <div class="coord" id="coord">—</div>
+  </div>
+  <div class="tlegend">
+    <span style="--c:#d8392b">استهداف</span>
+    <span style="--c:#8b4fd6">قرصنة</span>
+    <span style="--c:#b57400">نشاط مشبوه</span>
+    <span style="--c:#2b6fb6">تنبيه</span>
+    <span id="t-count" style="margin-inline-start:auto"></span>
   </div>
 </section>
 
@@ -236,11 +289,15 @@ if(Math.abs(a-b)<0.5)document.documentElement.classList.add("no-majalla")}catch(
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/mgrs@2.2.0/dist/mgrs.min.js"></script>
 <script>
 const REG={all:"كل المناطق",gulf:"الخليج العربي",hormuz:"مضيق هرمز",oman:"خليج عمان",bab:"باب المندب والبحر الأحمر",other:"خارج المناطق"};
 const CAT={attack:"استهداف",piracy:"قرصنة واختطاف",suspicious:"نشاط مشبوه",advisory:"تنبيه",other:"أخرى"};
 const COL={attack:"var(--c-attack)",piracy:"var(--c-piracy)",suspicious:"var(--c-susp)",advisory:"var(--c-adv)",other:"var(--c-mute)"};
-const HEX={attack:"#ff6b5b",piracy:"#c58cff",suspicious:"#f2b84b",advisory:"#6fa8dc",other:"#8497ad"};
+const HEX={attack:"--c-attack",piracy:"--c-piracy",suspicious:"--c-susp",advisory:"--c-adv",other:"--c-mute"};
+const hex=c=>getComputedStyle(document.documentElement).getPropertyValue(HEX[c]||"--c-mute").trim();
+const cssv=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const VES={Tanker:"ناقلة",Cargo:"سفينة شحن",Merchant:"سفينة تجارية",Other:"سفينة"};
 const CHIPS=[["all","كل الأنواع"],["attack","استهداف"],["piracy","قرصنة"],["suspicious","نشاط مشبوه"],["advisory","تنبيه"]];
 const BOUNDS={all:[[11,32],[30.8,62]],hormuz:[[25.2,55.4],[27.4,57.6]],gulf:[[23.6,47.5],[30.6,56.6]],oman:[[22,56],[25.8,62]],bab:[[10.5,32],[30,53.5]]};
@@ -294,7 +351,13 @@ function renderBars(b){
 }
 
 /* ---------- الخريطة ---------- */
-let map,layer,markers={};
+let map,layer,markers={},leafBases={},curBase=null;
+const themeBase=()=>document.documentElement.dataset.theme==="light"?"فاتحة":"داكنة";
+function syncLeafBase(){ // الخلفية الداكنة/الفاتحة تتبع الوضع، أما الأقمار الصناعية وOSM فتبقى كما اختارها المستخدم
+  if(!map||!(curBase==="داكنة"||curBase==="فاتحة"))return;
+  const want=themeBase();if(want===curBase)return;
+  map.removeLayer(leafBases[curBase]);leafBases[want].addTo(map);curBase=want;
+}
 function initMap(){
   if(!window.L){$("map").innerHTML='<div class="empty" style="padding:30px;direction:rtl;text-align:center">تعذّر تحميل الخريطة.</div>';return}
   map=L.map("map",{zoomControl:true,attributionControl:true,scrollWheelZoom:false,worldCopyJump:true}).fitBounds(BOUNDS.all);
@@ -306,12 +369,16 @@ function initMap(){
   const sat=L.layerGroup([
     L.tileLayer(esri+"World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:17,attribution:ea+" &mdash; Esri, Maxar, Earthstar Geographics"}),
     L.tileLayer(esri+"Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{maxZoom:17})]);
+  const light=L.layerGroup([
+    L.tileLayer(esri+"Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",{maxZoom:16,attribution:ea+" &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap"}),
+    L.tileLayer(esri+"Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}",{maxZoom:16})]);
   const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'});
-  const bases={"داكنة":dark,"أقمار صناعية":sat,"OpenStreetMap":osm};
-  let pick="داكنة";try{const v=localStorage.getItem("basemap");if(bases[v])pick=v}catch(e){}
-  bases[pick].addTo(map);
-  L.control.layers(bases,null,{position:"topright",collapsed:true}).addTo(map);
-  map.on("baselayerchange",e=>{try{localStorage.setItem("basemap",e.name)}catch(_){}});
+  leafBases={"داكنة":dark,"فاتحة":light,"أقمار صناعية":sat,"OpenStreetMap":osm};
+  let pick=null;try{const v=localStorage.getItem("basemap");if(leafBases[v])pick=v}catch(e){}
+  if(!pick||pick==="داكنة"||pick==="فاتحة")pick=themeBase();
+  curBase=pick;leafBases[pick].addTo(map);
+  L.control.layers(leafBases,null,{position:"topright",collapsed:true}).addTo(map);
+  map.on("baselayerchange",e=>{curBase=e.name;try{localStorage.setItem("basemap",e.name)}catch(_){}});
   map.on("focus",()=>map.scrollWheelZoom.enable());map.on("blur",()=>map.scrollWheelZoom.disable());
   layer=L.layerGroup().addTo(map);
 }
@@ -322,9 +389,9 @@ function renderMap(f){
   const pts=f.filter(i=>Number.isFinite(+i.lat)&&Number.isFinite(+i.lon)&&i.lat!==null&&i.lon!==null);
   // الأقدم أولًا حتى تظهر الأحدث فوقها
   [...pts].reverse().forEach(i=>{
-    const c=HEX[segOf(i)],ll=[+i.lat,+i.lon],recent=Date.now()-new Date(i.date)<864e5;
+    const c=hex(segOf(i)),ll=[+i.lat,+i.lon],recent=Date.now()-new Date(i.date)<864e5;
     if(recent)L.circleMarker(ll,{radius:9,color:c,weight:2,fill:false,interactive:false,className:"recent-ring"}).addTo(layer);
-    const m=L.circleMarker(ll,{radius:recent?8:6,color:"#0a1017",weight:1.5,fillColor:c,fillOpacity:.9}).addTo(layer);
+    const m=L.circleMarker(ll,{radius:recent?8:6,color:cssv("--bg"),weight:1.5,fillColor:c,fillOpacity:.9}).addTo(layer);
     m.bindPopup(()=>popupOf(i),{maxWidth:280});
     markers[keyOf(i)]=m;
   });
@@ -357,6 +424,89 @@ function showOnMap(i){
   $("map").scrollIntoView({behavior:"smooth",block:"center"});
   map.flyTo(m.getLatLng(),Math.max(map.getZoom(),8),{duration:.8});
   setTimeout(()=>m.openPopup(),850);
+}
+
+/* ---------- خريطة المسرح البحري (MapLibre + OpenFreeMap) ---------- */
+const TCOL={attack:"#d8392b",piracy:"#8b4fd6",suspicious:"#b57400",advisory:"#2b6fb6",other:"#6b7b8d"};
+const THEATRE=[[32,8.5],[66,31]];
+const SEAS=[["الخليج العربي",51.4,27.1,15],["مضيق هرمز",56.55,26.45,12],["خليج عُمان",58.7,24.55,14],["بحر العرب",62,15.5,17],
+  ["خليج عدن",48.2,12.55,14],["باب المندب",43.4,12.55,12],["البحر الأحمر",38.4,20.2,15],["خليج العقبة",34.75,28.6,11],["خليج السويس",32.95,28.95,11],["المحيط الهندي",62,9.5,15]];
+let tmap=null,tReady=false,tData=[],tLastFit=null;
+function initTheatre(){
+  if(!window.maplibregl){$("theatre").innerHTML='<div class="empty" style="padding:30px;direction:rtl;text-align:center">تعذّر تحميل الخريطة.</div>';return}
+  try{maplibregl.setRTLTextPlugin("https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js",true)}catch(e){}
+  tmap=new maplibregl.Map({container:"theatre",style:"https://tiles.openfreemap.org/styles/positron",
+    bounds:THEATRE,fitBoundsOptions:{padding:10},maxBounds:[[15,-8],[85,42]],minZoom:3,maxZoom:14,
+    dragRotate:false,pitchWithRotate:false,cooperativeGestures:false,attributionControl:{compact:true}});
+  tmap.touchZoomRotate.disableRotation();
+  tmap.addControl(new maplibregl.NavigationControl({showCompass:false}),"top-left");
+  tmap.addControl(new maplibregl.FullscreenControl(),"top-left");
+  tmap.addControl(new maplibregl.ScaleControl({unit:"metric",maxWidth:140}),"bottom-left");
+  tmap.addControl(new maplibregl.ScaleControl({unit:"nautical",maxWidth:140}),"bottom-left");
+  tmap.on("load",()=>{
+    // أسماء عربية لكل الطبقات، وإخفاء أسماء البحار الأصلية لصالح أسمائنا
+    for(const l of tmap.getStyle().layers){
+      if(l.type!=="symbol"||!(l.layout&&l.layout["text-field"]))continue;
+      if(l["source-layer"]==="water_name"){tmap.setLayoutProperty(l.id,"visibility","none");continue}
+      tmap.setLayoutProperty(l.id,"text-field",["coalesce",["get","name:ar"],["get","name"]]);
+    }
+    tmap.addSource("grat",{type:"geojson",data:{type:"FeatureCollection",features:[]}});
+    tmap.addLayer({id:"grat",type:"line",source:"grat",paint:{"line-color":"#5a7a99","line-opacity":.55,"line-width":1,"line-dasharray":[3,3]}});
+    tmap.addSource("seas",{type:"geojson",data:{type:"FeatureCollection",features:SEAS.map(([n,x,y,sz])=>({type:"Feature",properties:{n,sz},geometry:{type:"Point",coordinates:[x,y]}}))}});
+    tmap.addLayer({id:"seas",type:"symbol",source:"seas",layout:{"text-field":["get","n"],"text-font":["Noto Sans Regular"],"text-size":["interpolate",["linear"],["zoom"],3,["*",["get","sz"],.8],7,["*",["get","sz"],1.4]],"text-letter-spacing":.05,"text-allow-overlap":false},
+      paint:{"text-color":"#3a6c99","text-halo-color":"#ffffffcc","text-halo-width":1.2}});
+    tmap.addSource("inc",{type:"geojson",data:{type:"FeatureCollection",features:[]}});
+    tmap.addLayer({id:"inc-halo",type:"circle",source:"inc",filter:["==",["get","recent"],true],
+      paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,10,9,18],"circle-color":["get","color"],"circle-opacity":.22}});
+    tmap.addLayer({id:"inc",type:"circle",source:"inc",
+      paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,["case",["get","recent"],6,4.5],9,["case",["get","recent"],10,8]],
+        "circle-color":["get","color"],"circle-stroke-color":"#ffffff","circle-stroke-width":1.6}});
+    tmap.on("click","inc",e=>{const k=e.features[0].properties.k,i=tData.find(x=>keyOf(x)===k);if(!i)return;
+      new maplibregl.Popup({offset:10,maxWidth:"290px"}).setLngLat(e.features[0].geometry.coordinates).setDOMContent(popupOf(i)).addTo(tmap)});
+    tmap.on("mouseenter","inc",()=>tmap.getCanvas().style.cursor="pointer");
+    tmap.on("mouseleave","inc",()=>tmap.getCanvas().style.cursor="");
+    tReady=true;drawGrat();setTheatre(tData);
+  });
+  tmap.on("move",drawGrat);tmap.on("resize",drawGrat);
+  setTimeout(()=>{drawGrat();showCoord(tmap.getCenter())},0);
+  tmap.on("mousemove",e=>showCoord(e.lngLat));
+  tmap.on("mouseout",()=>showCoord(tmap.getCenter()));
+  tmap.on("moveend",()=>{if(!tmap._hover)showCoord(tmap.getCenter())});
+  tmap.getCanvas().addEventListener("mouseenter",()=>tmap._hover=true);
+  tmap.getCanvas().addEventListener("mouseleave",()=>tmap._hover=false);
+}
+function dms(v,pos,neg){const a=Math.abs(v),d=Math.floor(a),mf=(a-d)*60,m=Math.floor(mf),s=Math.round((mf-m)*60);
+  const [D,M,S]=s===60?(m+1===60?[d+1,0,0]:[d,m+1,0]):[d,m,s];
+  return `${D}°${String(M).padStart(2,"0")}′${String(S).padStart(2,"0")}″${v>=0?pos:neg}`}
+function showCoord(ll){
+  if(!ll)return;let g="";
+  try{if(window.mgrs&&Math.abs(ll.lat)<84){const m=mgrs.forward([ll.lng,ll.lat],5).match(/^(\d{1,2}[C-X])([A-Z]{2})(\d{5})(\d{5})$/);if(m)g=` | ${m[1]} ${m[2]} ${m[3]} ${m[4]}`}}catch(e){}
+  $("coord").textContent=`${dms(ll.lat,"N","S")} ${dms(ll.lng,"E","W")}${g}`;
+}
+function gstep(z){return z<4.2?5:z<5.6?2:z<7?1:z<8.4?.5:z<9.8?.25:.1}
+function glabel(v,pos,neg){const a=Math.abs(v),d=Math.floor(a+1e-9),m=Math.round((a-d)*60);return `${d}°${m?String(m).padStart(2,"0")+"′":""}${v===0?"":v>0?pos:neg}`}
+function drawGrat(){
+  if(!tmap)return;
+  const b=tmap.getBounds(),st=gstep(tmap.getZoom()),f=[],box=$("grat"),W=box.clientWidth,H=box.clientHeight;
+  const x0=Math.floor(b.getWest()/st)*st,x1=Math.ceil(b.getEast()/st)*st,y0=Math.floor(b.getSouth()/st)*st,y1=Math.ceil(b.getNorth()/st)*st;
+  let html="";
+  for(let x=x0;x<=x1+1e-9;x+=st){const v=+x.toFixed(4);f.push({type:"Feature",geometry:{type:"LineString",coordinates:[[v,y0-st],[v,y1+st]]}});
+    const p=tmap.project([v,b.getSouth()]);if(p.x>40&&p.x<W-40)html+=`<span style="left:${p.x}px;bottom:4px;transform:translateX(-50%)">${glabel(v,"E","W")}</span>`}
+  for(let y=y0;y<=y1+1e-9;y+=st){const v=+y.toFixed(4);f.push({type:"Feature",geometry:{type:"LineString",coordinates:[[x0-st,v],[x1+st,v]]}});
+    const p=tmap.project([b.getEast(),v]);if(p.y>30&&p.y<H-60)html+=`<span style="right:4px;top:${p.y}px;transform:translateY(-50%)">${glabel(v,"N","S")}</span>`}
+  box.innerHTML=html;
+  if(tReady)tmap.getSource("grat").setData({type:"FeatureCollection",features:f});
+}
+function setTheatre(f){
+  tData=f;
+  const pts=f.filter(i=>i.lat!=null&&i.lon!=null&&Number.isFinite(+i.lat)&&Number.isFinite(+i.lon));
+  $("t-count").textContent=`${pts.length} على الخريطة`;
+  if(!tReady)return;
+  tmap.getSource("inc").setData({type:"FeatureCollection",features:[...pts].reverse().map(i=>({type:"Feature",
+    properties:{k:keyOf(i),color:TCOL[segOf(i)],recent:Date.now()-new Date(i.date)<864e5},geometry:{type:"Point",coordinates:[+i.lon,+i.lat]}}))});
+  if(tLastFit!==S.region){const first=tLastFit===null;tLastFit=S.region;
+    if(S.region==="all"){if(!first)tmap.fitBounds(THEATRE,{padding:10})}
+    else{const bb=BOUNDS[S.region];tmap.fitBounds([[bb[0][1],bb[0][0]],[bb[1][1],bb[1][0]]],{padding:20})}}
 }
 
 /* ---------- القائمة ---------- */
@@ -394,6 +544,7 @@ function render(){
   $("n-last").textContent=b[0]?ago(b[0].date):"—";
   renderBars(b);
   renderMap(f);
+  setTheatre(f);
   renderFeed(f);
   renderWW();
 }
@@ -481,7 +632,20 @@ function renderCMF(c){
     <div class="small">${x.date?`<span>${fmtD(x.date)} · ${ago(x.date)}</span>`:""}${(x.ctf||[]).map(t=>`<span class="ctf">${esc(t)}</span>`).join("")}</div></li>`).join("");
 }
 async function loadCMF(){try{const r=await fetch("cmf.json?t="+Date.now(),{cache:"no-store"});if(r.ok)renderCMF(await r.json())}catch(e){}}
+/* ---------- الوضع النهاري والليلي ---------- */
+const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+function paintThemeBtn(){const l=document.documentElement.dataset.theme==="light";
+  $("theme-btn").innerHTML=l?MOON+"الوضع الليلي":SUN+"الوضع النهاري";
+  $("theme-btn").setAttribute("aria-label",l?"التبديل إلى الوضع الليلي":"التبديل إلى الوضع النهاري")}
+$("theme-btn").onclick=()=>{
+  const t=document.documentElement.dataset.theme==="light"?"dark":"light";
+  document.documentElement.dataset.theme=t;try{localStorage.setItem("theme",t)}catch(e){}
+  paintThemeBtn();syncLeafBase();if(S.data.length)render();
+};
+paintThemeBtn();
 initMap();
+initTheatre();
 loadCMF();
 load();setInterval(load,5*60*1000);
 </script>
